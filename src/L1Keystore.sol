@@ -14,6 +14,10 @@ contract Keystore is Ownable {
 
     mapping(address userAccount => bytes32 keyHash) private userKeyHashes;
 
+    /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
+
     event KeyStored(address indexed user, bytes32 indexed keyHash);
     event KeyUpdated(address indexed user, bytes32 indexed keyHash);
     event KeyRemoved(address indexed user);
