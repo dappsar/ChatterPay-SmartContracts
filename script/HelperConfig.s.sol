@@ -26,6 +26,7 @@ contract HelperConfig is Script {
     uint256 constant ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
     uint256 constant SCROLL_DEVNET_CHAIN_ID = 2227728;
     uint256 constant ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
+    uint256 constant OPTIMISM_SEPOLIA_CHAIN_ID = 11155420;
     uint256 constant LOCAL_CHAIN_ID = 31337;
     address constant BURNER_WALLET = 0x08f88ef7ecD64a2eA1f3887d725F78DDF1bacDF1;
     // address constant FOUNDRY_DEFAULT_WALLET = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
@@ -41,6 +42,7 @@ contract HelperConfig is Script {
         networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getEthereumSepoliaConfig();
         networkConfigs[SCROLL_DEVNET_CHAIN_ID] = getScrollSepoliaConfig();
         networkConfigs[ARBITRUM_SEPOLIA_CHAIN_ID] = getArbitrumSepoliaConfig();
+        networkConfigs[OPTIMISM_SEPOLIA_CHAIN_ID] = getOptimismSepoliaConfig();
     }
 
     function getConfig() public returns (NetworkConfig memory) {
@@ -80,6 +82,14 @@ contract HelperConfig is Script {
     function getScrollSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
             entryPoint: address(0), // There is no entrypoint in Scroll
+            usdc: 0x0000000000000000000000000000000000000000, // address TBD
+            account: BURNER_WALLET
+        });
+    }
+
+    function getOptimismSepoliaConfig() public pure returns (NetworkConfig memory) {
+        return NetworkConfig({
+            entryPoint: 0x0000000000000000000000000000000000000000, // address TBD
             usdc: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });

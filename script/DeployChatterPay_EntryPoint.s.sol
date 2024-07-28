@@ -3,7 +3,7 @@
 pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {HelperConfig} from "./HelperConfig.sol";
+import {HelperConfig} from "./HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPay.sol";
 import {ChatterPayBeacon} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPayBeacon.sol";
 import {ChatterPayWalletFactory} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPayWalletFactory.sol";
@@ -11,15 +11,15 @@ import {ChatterPayWalletFactory} from "../src/L2/AccountAbstraction_EntryPoint/C
 contract DeployChatterPay_EntryPoint is Script {
 
   function run() public {
-    DeployChatterPay();
+    deployChatterPay();
   }
 
-  function DeployChatterPay() public returns (HelperConfig, ChatterPay, ChatterPayBeacon, ChatterPayWalletFactory) {
+  function deployChatterPay() public returns (HelperConfig, ChatterPay, ChatterPayBeacon, ChatterPayWalletFactory) {
     // Deploy HelperConfig
     HelperConfig helperConfig = new HelperConfig();
     HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
     
-    vm.startBroadcast();
+    vm.startBroadcast(config.account);
     // Deploy Logic
     ChatterPay chatterPay = new ChatterPay();
     // Deploy Beacon (with Logic address)

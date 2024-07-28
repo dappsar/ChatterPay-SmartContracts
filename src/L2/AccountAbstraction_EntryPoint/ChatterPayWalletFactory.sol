@@ -3,10 +3,11 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
 
-contract ChatterPayWalletFactory {
+contract ChatterPayWalletFactory is Ownable {
     
     address[] public proxies;
     address immutable entryPoint;
@@ -14,12 +15,12 @@ contract ChatterPayWalletFactory {
 
     event ProxyCreated(address indexed owner, address proxyAddress);
 
-    constructor(address _beacon, address _entryPoint) {
+    constructor(address _beacon, address _entryPoint) Ownable(msg.sender) {
         beacon = _beacon;
         entryPoint = _entryPoint;
     }
 
-    function createProxy(address owner) public returns (address) {
+    function createProxy(address owner) public onlyOwner returns (address) {
         BeaconProxy walletProxy = new BeaconProxy(
             beacon,
             abi.encodeWithSelector(ChatterPay.initialize.selector, owner, entryPoint)
