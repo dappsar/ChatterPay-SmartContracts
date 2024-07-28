@@ -24,7 +24,7 @@ contract HelperConfig is Script {
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
     uint256 constant ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
-    uint256 constant SCROLL_SEPOLIA_CHAIN_ID = 534351;
+    uint256 constant SCROLL_DEVNET_CHAIN_ID = 2227728;
     uint256 constant ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
     uint256 constant LOCAL_CHAIN_ID = 31337;
     address constant BURNER_WALLET = 0x08f88ef7ecD64a2eA1f3887d725F78DDF1bacDF1;
@@ -39,7 +39,7 @@ contract HelperConfig is Script {
     //////////////////////////////////////////////////////////////*/
     constructor() {
         networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getEthereumSepoliaConfig();
-        networkConfigs[SCROLL_SEPOLIA_CHAIN_ID] = getScrollSepoliaConfig();
+        networkConfigs[SCROLL_DEVNET_CHAIN_ID] = getScrollSepoliaConfig();
         networkConfigs[ARBITRUM_SEPOLIA_CHAIN_ID] = getArbitrumSepoliaConfig();
     }
 
