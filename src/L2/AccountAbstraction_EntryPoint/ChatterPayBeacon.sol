@@ -8,11 +8,14 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract ChatterPayBeacon is Ownable {
     UpgradeableBeacon immutable beacon;
 
+    address public chatterPayimplementation;
+
     constructor(address _initChatterPayImplementation) Ownable(msg.sender) {
         beacon = new UpgradeableBeacon(
             _initChatterPayImplementation,
             msg.sender
         );
+        chatterPayimplementation = _initChatterPayImplementation;
     }
 
     function update(address _newChatterPayImplementation) public onlyOwner {
