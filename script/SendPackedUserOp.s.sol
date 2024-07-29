@@ -7,27 +7,39 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ChatterPayWalletFactory} from "src/L2/AccountAbstraction_EntryPoint/ChatterPayWalletFactory.sol";
 import {ChatterPay} from "src/L2/AccountAbstraction_EntryPoint/ChatterPay.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
+
+error SendPackedUserOp__NoProxyDeployed();
 
 contract SendPackedUserOp is Script {
     using MessageHashUtils for bytes32;
 
     // Make sure you trust this user - don't run this on Mainnet!
-    address constant RANDOM_APPROVER = 0x9EA9b0cc1919def1A3CfAEF4F7A66eE3c36F86fC;
+    address RANDOM_APPROVER = makeAddr("RANDOM_APPROVER");
 
     function run() public {
         // Setup
         HelperConfig helperConfig = new HelperConfig();
-        address dest = helperConfig.getConfig().usdc; // arbitrum mainnet USDC address
+        address dest = helperConfig.getConfig().usdc;
         uint256 value = 0;
-        address chatterPayAddress = DevOpsTools.get_most_recent_deployment("ChatterPay", block.chainid);
+        // address chatterPayAddress = DevOpsTools.get_most_recent_deployment("ChatterPay", block.chainid);
+        address chatterPayWalletFactoryAddress = DevOpsTools.get_most_recent_deployment("ChatterPayWalletFactory", block.chainid);
+        address chatterPayProxyAddress;
+        if(ChatterPayWalletFactory(chatterPayWalletFactoryAddress).getProxiesCount() > 0){
+          chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).proxies(0);
+        } else {
+          revert SendPackedUserOp__NoProxyDeployed();
+        }
 
+        // Example: approve 1e18 USDC to RANDOM_APPROVER
+        // Must create Proxy address before sending userOp (Qué pasa si la mandamos antes de crear la wallet? Revert?)
         bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, RANDOM_APPROVER, 1e18);
         bytes memory executeCalldata =
             abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
         PackedUserOperation memory userOp =
-            generateSignedUserOperation(executeCalldata, helperConfig.getConfig(), chatterPayAddress);
+            generateSignedUserOperation(executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress);
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
         ops[0] = userOp;
 
@@ -40,11 +52,11 @@ contract SendPackedUserOp is Script {
     function generateSignedUserOperation(
         bytes memory callData,
         HelperConfig.NetworkConfig memory config,
-        address chatterPay
+        address chatterPayProxy
     ) public view returns (PackedUserOperation memory) {
         // 1. Generate the unsigned data
-        uint256 nonce = vm.getNonce(chatterPay) - 1;
-        PackedUserOperation memory userOp = _generateUnsignedUserOperation(callData, chatterPay, nonce);
+        uint256 nonce = vm.getNonce(chatterPayProxy) - 1;
+        PackedUserOperation memory userOp = _generateUnsignedUserOperation(callData, chatterPayProxy, nonce);
 
         // 2. Get the userOp Hash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);

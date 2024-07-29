@@ -8,7 +8,6 @@ import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
 
 contract ChatterPayWalletFactory is Ownable {
-    
     address[] public proxies;
     address immutable entryPoint;
     address public immutable beacon;
@@ -23,7 +22,7 @@ contract ChatterPayWalletFactory is Ownable {
     function createProxy(address owner) public onlyOwner returns (address) {
         BeaconProxy walletProxy = new BeaconProxy(
             beacon,
-            abi.encodeWithSelector(ChatterPay.initialize.selector, owner, entryPoint)
+            abi.encodeWithSelector(ChatterPay.initialize.selector, entryPoint)
         );
         proxies.push(address(walletProxy));
         emit ProxyCreated(owner, address(walletProxy));
@@ -32,5 +31,9 @@ contract ChatterPayWalletFactory is Ownable {
 
     function getProxies() public view returns (address[] memory) {
         return proxies;
+    }
+
+    function getProxiesCount() public view returns (uint256) {
+        return proxies.length;
     }
 }

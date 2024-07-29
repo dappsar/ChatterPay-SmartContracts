@@ -10,14 +10,15 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {console} from "forge-std/Console.sol";
 
 contract ChatterPay is Initializable, IAccount, Ownable(msg.sender) {
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
-    error MinimalAccount__NotFromEntryPoint();
-    error MinimalAccount__NotFromEntryPointOrOwner();
-    error MiniamlAccount__CallFailed(bytes);
+    error ChatterPay__NotFromEntryPoint();
+    error ChatterPay__NotFromEntryPointOrOwner();
+    error ChatterPay__CallFailed(bytes);
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -29,14 +30,14 @@ contract ChatterPay is Initializable, IAccount, Ownable(msg.sender) {
     //////////////////////////////////////////////////////////////*/
     modifier requireFromEntryPoint() {
         if (msg.sender != address(i_entryPoint)) {
-            revert MinimalAccount__NotFromEntryPoint();
+            revert ChatterPay__NotFromEntryPoint();
         }
         _;
     }
 
     modifier requireFromEntryPointOrOwner() {
         if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
-            revert MinimalAccount__NotFromEntryPointOrOwner();
+            revert ChatterPay__NotFromEntryPointOrOwner();
         }
         _;
     }
@@ -63,11 +64,11 @@ contract ChatterPay is Initializable, IAccount, Ownable(msg.sender) {
             functionData
         );
         if (!success) {
-            revert MiniamlAccount__CallFailed(result);
+            revert ChatterPay__CallFailed(result);
         }
     }
 
-    // A signature is valid, if it's the MinimalAccount owner
+    // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(
         PackedUserOperation calldata userOp,
         bytes32 userOpHash,
