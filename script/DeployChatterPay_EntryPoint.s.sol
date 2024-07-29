@@ -22,7 +22,7 @@ contract DeployChatterPay_EntryPoint is Script {
     vm.startBroadcast(config.account);
     // Deploy Logic
     ChatterPay chatterPay = new ChatterPay();
-    chatterPay.initialize(config.entryPoint);
+    chatterPay.initialize(config.entryPoint, config.account);
     // Deploy Beacon (with Logic address)
     ChatterPayBeacon beacon = new ChatterPayBeacon(address(chatterPay));
     // Deploy Factory (with Beacon & EntryPoint address)

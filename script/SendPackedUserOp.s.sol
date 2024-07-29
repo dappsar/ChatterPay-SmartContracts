@@ -24,7 +24,6 @@ contract SendPackedUserOp is Script {
         HelperConfig helperConfig = new HelperConfig();
         address dest = helperConfig.getConfig().usdc;
         uint256 value = 0;
-        // address chatterPayAddress = DevOpsTools.get_most_recent_deployment("ChatterPay", block.chainid);
         address chatterPayWalletFactoryAddress = DevOpsTools.get_most_recent_deployment("ChatterPayWalletFactory", block.chainid);
         address chatterPayProxyAddress;
         if(ChatterPayWalletFactory(chatterPayWalletFactoryAddress).getProxiesCount() > 0){
@@ -67,8 +66,9 @@ contract SendPackedUserOp is Script {
         bytes32 r;
         bytes32 s;
         uint256 ANVIL_DEFAULT_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+        uint256 ANVIL_DEFAULT_KEY_2 = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
         if (block.chainid == 31337) {
-            (v, r, s) = vm.sign(ANVIL_DEFAULT_KEY, digest);
+            (v, r, s) = vm.sign(ANVIL_DEFAULT_KEY_2, digest);
         } else {
             (v, r, s) = vm.sign(config.account, digest);
         }

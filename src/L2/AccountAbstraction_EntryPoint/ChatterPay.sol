@@ -5,14 +5,14 @@ pragma solidity ^0.8.24;
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IAccount} from "lib/account-abstraction/contracts/interfaces/IAccount.sol";
 import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {console} from "forge-std/Console.sol";
 
-contract ChatterPay is Initializable, IAccount, Ownable(msg.sender) {
+contract ChatterPay is IAccount, OwnableUpgradeable {
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -46,7 +46,10 @@ contract ChatterPay is Initializable, IAccount, Ownable(msg.sender) {
                                FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function initialize(address entryPoint) public initializer {
+    function initialize(address entryPoint, address newOwner) public initializer {
+        console.log("ChatterPay initialize MSG.SENDER: %s", msg.sender);
+        __Ownable_init(newOwner);
+        console.log("ChatterPay initialize OWNER: %s", owner());
         i_entryPoint = IEntryPoint(entryPoint);
     }
 
@@ -91,6 +94,8 @@ contract ChatterPay is Initializable, IAccount, Ownable(msg.sender) {
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
+        console.log("Signer: %s", signer);
+        console.log("Owner: %s", owner());
         if (signer != owner()) {
             return SIG_VALIDATION_FAILED;
         }

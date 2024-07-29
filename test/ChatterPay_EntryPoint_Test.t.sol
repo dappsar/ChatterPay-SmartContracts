@@ -25,6 +25,7 @@ contract ChatterPay_EntryPoint_Test is Test {
   address deployer;
   address RANDOM_USER = makeAddr("randomUser");
   address RANDOM_APPROVER = makeAddr("RANDOM_APPROVER");
+  address ANVIL_DEFAULT_USER_2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
   
   function setUp() public {
     DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
@@ -37,8 +38,8 @@ contract ChatterPay_EntryPoint_Test is Test {
     factory = factory;
   }
 
-  function createProxyForRandomUser() public returns (address) {
-    address proxy = factory.createProxy(RANDOM_USER);
+  function createProxyForUser(address user) public returns (address) {
+    address proxy = factory.createProxy(user);
     assertEq(factory.getProxiesCount(), 1, "There should be 1 proxy");
     return proxy;
   }
@@ -58,8 +59,8 @@ contract ChatterPay_EntryPoint_Test is Test {
   }
 
   function testApproveUSDC() public {
-    vm.startPrank(deployer); // helperConfig.getConfig().account;
-    address proxy = createProxyForRandomUser();
+    vm.startPrank(deployer);
+    address proxy = createProxyForUser(ANVIL_DEFAULT_USER_2);
     
     // Assign random ETH to proxy to pay for gas
     vm.deal(proxy, 1 ether);
@@ -78,6 +79,8 @@ contract ChatterPay_EntryPoint_Test is Test {
     ops[0] = userOp;
 
     IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(proxy));
+
+    assertEq(usdc.allowance(proxy, RANDOM_APPROVER), 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
     
     vm.stopPrank();
   }

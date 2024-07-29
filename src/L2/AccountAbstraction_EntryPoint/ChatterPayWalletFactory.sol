@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
+import {console} from "forge-std/Console.sol";
 
 contract ChatterPayWalletFactory is Ownable {
     address[] public proxies;
@@ -19,13 +20,13 @@ contract ChatterPayWalletFactory is Ownable {
         entryPoint = _entryPoint;
     }
 
-    function createProxy(address owner) public onlyOwner returns (address) {
+    function createProxy(address _owner) public onlyOwner returns (address) {
         BeaconProxy walletProxy = new BeaconProxy(
             beacon,
-            abi.encodeWithSelector(ChatterPay.initialize.selector, entryPoint)
+            abi.encodeWithSelector(ChatterPay.initialize.selector, entryPoint, _owner)
         );
         proxies.push(address(walletProxy));
-        emit ProxyCreated(owner, address(walletProxy));
+        emit ProxyCreated(_owner, address(walletProxy));
         return address(walletProxy);
     }
 
