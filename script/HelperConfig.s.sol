@@ -65,7 +65,7 @@ contract HelperConfig is Script {
 
     function getEthereumSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
+            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x53844F9577C2334e541Aec7Df7174ECe5dF1fCf0, // Update with your own mock token
             account: BURNER_WALLET
         });
@@ -73,7 +73,7 @@ contract HelperConfig is Script {
 
     function getArbitrumSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            entryPoint: 0x0000000000000000000000000000000000000000, // address TBD
+            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
@@ -81,7 +81,7 @@ contract HelperConfig is Script {
 
     function getScrollSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            entryPoint: address(0), // There is no entrypoint in Scroll
+            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
@@ -89,7 +89,7 @@ contract HelperConfig is Script {
 
     function getOptimismSepoliaConfig() public pure returns (NetworkConfig memory) {
         return NetworkConfig({
-            entryPoint: 0x0000000000000000000000000000000000000000, // address TBD
+            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
