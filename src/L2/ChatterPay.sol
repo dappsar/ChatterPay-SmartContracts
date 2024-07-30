@@ -92,8 +92,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
-        console.log("Signer: %s", signer);
-        console.log("Owner: %s", owner());
         if (signer != owner()) {
             return SIG_VALIDATION_FAILED;
         }
