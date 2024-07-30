@@ -4,9 +4,9 @@ pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
-import {ChatterPay} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPay.sol";
-import {ChatterPayBeacon} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPayBeacon.sol";
-import {ChatterPayWalletFactory} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPayWalletFactory.sol";
+import {ChatterPay} from "../src/L2/ChatterPay.sol";
+import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
+import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 
 contract DeployChatterPay_EntryPoint is Script {
 

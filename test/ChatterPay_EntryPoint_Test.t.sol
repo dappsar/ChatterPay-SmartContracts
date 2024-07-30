@@ -5,9 +5,9 @@ pragma solidity ^0.8.24;
 import {Test, console} from "forge-std/Test.sol";
 import {DeployChatterPay_EntryPoint} from "../script/DeployChatterPay_EntryPoint.s.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
-import {ChatterPay} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPay.sol";
-import {ChatterPayWalletFactory} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPayWalletFactory.sol";
-import {ChatterPayBeacon} from "../src/L2/AccountAbstraction_EntryPoint/ChatterPayBeacon.sol";
+import {ChatterPay} from "../src/L2/ChatterPay.sol";
+import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
+import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, PackedUserOperation, IEntryPoint} from "script/SendPackedUserOp.s.sol";
 

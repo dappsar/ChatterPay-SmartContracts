@@ -17,6 +17,7 @@ contract HelperConfig is Script {
     struct NetworkConfig {
         address entryPoint;
         address usdc;
+        address usdt;
         address account;
     }
 
@@ -67,6 +68,7 @@ contract HelperConfig is Script {
         return NetworkConfig({
             entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238,
+            usdt: 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06,
             account: BURNER_WALLET
         });
     }
@@ -75,6 +77,7 @@ contract HelperConfig is Script {
         return NetworkConfig({
             entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
+            usdt: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
     }
@@ -83,6 +86,7 @@ contract HelperConfig is Script {
         return NetworkConfig({
             entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
+            usdt: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
     }
@@ -91,6 +95,7 @@ contract HelperConfig is Script {
         return NetworkConfig({
             entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7,
+            usdt: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
     }
@@ -105,13 +110,15 @@ contract HelperConfig is Script {
         vm.startBroadcast(ANVIL_DEFAULT_ACCOUNT);
         EntryPoint entryPoint = new EntryPoint();
         console.log("EntryPoint deployed! %s", address(entryPoint));
-        ERC20Mock erc20Mock = new ERC20Mock();
-        console.log("ERC20Mock deployed! %s", address(erc20Mock));
+        ERC20Mock usdcMock = new ERC20Mock();
+        console.log("ERC20Mock deployed! %s", address(usdcMock));
+        ERC20Mock usdtMock = new ERC20Mock();
+        console.log("ERC20Mock deployed! %s", address(usdtMock));
         vm.stopBroadcast();
         console.log("Mocks deployed!");
 
         localNetworkConfig =
-            NetworkConfig({entryPoint: address(entryPoint), usdc: address(erc20Mock), account: ANVIL_DEFAULT_ACCOUNT});
+            NetworkConfig({entryPoint: address(entryPoint), usdc: address(usdcMock), usdt: address(usdtMock), account: ANVIL_DEFAULT_ACCOUNT});
         return localNetworkConfig;
     }
 }

@@ -7,8 +7,8 @@ import {HelperConfig} from "script/HelperConfig.s.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ChatterPayWalletFactory} from "src/L2/AccountAbstraction_EntryPoint/ChatterPayWalletFactory.sol";
-import {ChatterPay} from "src/L2/AccountAbstraction_EntryPoint/ChatterPay.sol";
+import {ChatterPayWalletFactory} from "src/L2/ChatterPayWalletFactory.sol";
+import {ChatterPay} from "src/L2/ChatterPay.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 error SendPackedUserOp__NoProxyDeployed();
