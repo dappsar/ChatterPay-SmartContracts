@@ -20,13 +20,20 @@ contract DeployChatterPay_EntryPoint is Script {
     HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
     
     vm.startBroadcast(config.account);
+    console.log("Deploying ChatterPay contracts in chainId %s with account: %s", block.chainid, config.account);
+    
     // Deploy Logic
-    ChatterPay chatterPay = new ChatterPay();
+    ChatterPay chatterPay = new ChatterPay{salt: bytes32(bytes20(config.account))}();
     chatterPay.initialize(config.entryPoint, config.account);
+    console.log("ChatterPay deployed to address %s", address(chatterPay));
+    
     // Deploy Beacon (with Logic address)
-    ChatterPayBeacon beacon = new ChatterPayBeacon(address(chatterPay));
+    ChatterPayBeacon beacon = new ChatterPayBeacon{salt: bytes32(bytes20(config.account))}(address(chatterPay));
+    console.log("ChatterPayBeacon deployed to address %s", address(beacon));
+    
     // Deploy Factory (with Beacon & EntryPoint address)
-    ChatterPayWalletFactory factory = new ChatterPayWalletFactory(address(beacon), config.entryPoint);
+    ChatterPayWalletFactory factory = new ChatterPayWalletFactory{salt: bytes32(bytes20(config.account))}(address(beacon), config.entryPoint);
+    console.log("ChatterPayWalletFactory deployed to address %s", address(factory));
     vm.stopBroadcast();
 
     return (helperConfig, chatterPay, beacon, factory);
