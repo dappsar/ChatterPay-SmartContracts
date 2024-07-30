@@ -21,9 +21,15 @@ contract ChatterPayWalletFactory is Ownable {
     }
 
     function createProxy(address _owner) public onlyOwner returns (address) {
-        BeaconProxy walletProxy = new BeaconProxy(
+        BeaconProxy walletProxy = new BeaconProxy{
+            salt: bytes32(bytes20(owner))
+        }(
             beacon,
-            abi.encodeWithSelector(ChatterPay.initialize.selector, entryPoint, _owner)
+            abi.encodeWithSelector(
+                ChatterPay.initialize.selector,
+                entryPoint,
+                _owner
+            )
         );
         proxies.push(address(walletProxy));
         emit ProxyCreated(_owner, address(walletProxy));
