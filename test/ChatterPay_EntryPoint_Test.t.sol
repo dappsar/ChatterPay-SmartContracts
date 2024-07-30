@@ -60,15 +60,13 @@ contract ChatterPay_EntryPoint_Test is Test {
 
   function testApproveUSDC() public {
     vm.startPrank(deployer);
-    address proxy = createProxyForUser(ANVIL_DEFAULT_USER_2);
     
+    address proxy = createProxyForUser(ANVIL_DEFAULT_USER_2);
     // Assign random ETH to proxy to pay for gas
     vm.deal(proxy, 1 ether);
-    
     // Setup
     address dest = helperConfig.getConfig().usdc;
     uint256 value = 0;
-
     // Example: approve 1e18 USDC to RANDOM_APPROVER
     bytes memory functionData = abi.encodeWithSelector(usdc.approve.selector, RANDOM_APPROVER, 1e18);
     bytes memory executeCalldata =
@@ -77,9 +75,11 @@ contract ChatterPay_EntryPoint_Test is Test {
         sendPackedUserOp.generateSignedUserOperation(executeCalldata, helperConfig.getConfig(), proxy);
     PackedUserOperation[] memory ops = new PackedUserOperation[](1);
     ops[0] = userOp;
-
     IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(proxy));
-
+    console.log("Proxy: %s", proxy);
+    console.log("Random Approver: %s", RANDOM_APPROVER);
+    console.log("Allowance: %s", usdc.allowance(proxy, RANDOM_APPROVER));
+    console.log("Address usdc: %s", dest);
     assertEq(usdc.allowance(proxy, RANDOM_APPROVER), 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
     
     vm.stopPrank();
