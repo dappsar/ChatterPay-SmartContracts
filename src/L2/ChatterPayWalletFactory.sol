@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.24;
 
-import "lib/openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
+import {BeaconProxy} from "lib/openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";

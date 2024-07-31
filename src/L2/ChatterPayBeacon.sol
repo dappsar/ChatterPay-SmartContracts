@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.24;
 
-import "lib/openzeppelin-contracts/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import {UpgradeableBeacon} from "lib/openzeppelin-contracts/contracts/proxy/beacon/UpgradeableBeacon.sol";
 
 contract ChatterPayBeacon is UpgradeableBeacon {
     

@@ -12,18 +12,29 @@ import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstrac
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {console} from "forge-std/Console.sol";
 
+interface IL1Blocks {
+    function latestBlockNumber() external view returns (uint256);
+}
+
 contract ChatterPay is IAccount, OwnableUpgradeable {
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
     error ChatterPay__NotFromEntryPoint();
     error ChatterPay__NotFromEntryPointOrOwner();
-    error ChatterPay__CallFailed(bytes);
+    error ChatterPay__ExecuteCallFailed(bytes);
+    error ChatterPay__L1SLoadFailed();
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
+
     IEntryPoint private i_entryPoint;
+    address constant L1_BLOCKS_ADDRESS =
+        0x5300000000000000000000000000000000000001; // Scroll Devnet Only!
+    address constant L1_SLOAD_ADDRESS =
+        0x0000000000000000000000000000000000000101; // Scroll Devnet Only!
+    address private l1StorageAddr;
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -46,9 +57,14 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
                                FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function initialize(address entryPoint, address newOwner) public initializer {
-        __Ownable_init(newOwner);
+    function initialize(
+        address entryPoint,
+        address newOwner,
+        address _l1Storage
+    ) public initializer {
         i_entryPoint = IEntryPoint(entryPoint);
+        __Ownable_init(newOwner);
+        l1StorageAddr = _l1Storage;
     }
 
     receive() external payable {}
@@ -65,7 +81,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             functionData
         );
         if (!success) {
-            revert ChatterPay__CallFailed(result);
+            revert ChatterPay__ExecuteCallFailed(result);
         }
     }
 
@@ -114,33 +130,19 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     function getEntryPoint() external view returns (address) {
         return address(i_entryPoint);
     }
+
+    function latestL1BlockNumber() public view returns (uint256) {
+        uint256 l1BlockNum = IL1Blocks(L1_BLOCKS_ADDRESS).latestBlockNumber();
+        return l1BlockNum;
+    }
+
+    function retrieveFromL1() public view returns (uint) {
+        uint256 NUMBER_SLOT; // @dev TBD Slot Number
+        bytes memory input = abi.encodePacked(l1StorageAddr, NUMBER_SLOT);
+        (bool success, bytes memory ret) = L1_SLOAD_ADDRESS.staticcall(input);
+        if (!success) {
+            revert ChatterPay__L1SLoadFailed();
+        }
+        return abi.decode(ret, (uint256));
+    }
 }
-
-// interface IL1Blocks {
-//     function latestBlockNumber() external view returns (uint256);
-// }
-
-// address constant L1_BLOCKS_ADDRESS = 0x5300000000000000000000000000000000000001;
-// address constant L1_SLOAD_ADDRESS = 0x0000000000000000000000000000000000000101;
-// uint256 constant NUMBER_SLOT = 0;
-// address immutable l1StorageAddr;
-
-// constructor(address _l1Storage) {
-//     l1StorageAddr = _l1Storage;
-// }
-
-// function latestL1BlockNumber() public view returns (uint256) {
-//     uint256 l1BlockNum = IL1Blocks(L1_BLOCKS_ADDRESS).latestBlockNumber();
-//     return l1BlockNum;
-// }
-
-// function retrieveFromL1() public view returns(uint) {
-//     bytes memory input = abi.encodePacked(l1StorageAddr, NUMBER_SLOT);
-//     bool success;
-//     bytes memory ret;
-//     (success, ret) = L1_SLOAD_ADDRESS.staticcall(input);
-//     if (!success) {
-//         revert("L1SLOAD failed");
-//     }
-//     return abi.decode(ret, (uint256));
-// }
