@@ -28,11 +28,11 @@ contract DeployChatterPay_EntryPoint is Script {
     console.log("ChatterPay deployed to address %s", address(chatterPay));
     
     // Deploy Beacon (with Logic address)
-    ChatterPayBeacon beacon = new ChatterPayBeacon{salt: bytes32(bytes20(config.account))}(address(chatterPay));
+    ChatterPayBeacon beacon = new ChatterPayBeacon{salt: bytes32(bytes20(config.account))}(address(chatterPay), config.account);
     console.log("ChatterPayBeacon deployed to address %s", address(beacon));
     
     // Deploy Factory (with Beacon & EntryPoint address)
-    ChatterPayWalletFactory factory = new ChatterPayWalletFactory{salt: bytes32(bytes20(config.account))}(address(beacon), config.entryPoint);
+    ChatterPayWalletFactory factory = new ChatterPayWalletFactory{salt: bytes32(bytes20(config.account))}(address(beacon), config.entryPoint, config.account);
     console.log("ChatterPayWalletFactory deployed to address %s", address(factory));
     vm.stopBroadcast();
 

@@ -22,40 +22,52 @@ contract SendPackedUserOp is Script {
     function run() public {
         // Setup
         HelperConfig helperConfig = new HelperConfig();
-        address dest = helperConfig.getConfig().usdc;
+        HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
+        address ANVIL_DEFAULT_USER_2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+
+        address dest = config.usdc;
         uint256 value = 0;
         address chatterPayWalletFactoryAddress = DevOpsTools.get_most_recent_deployment("ChatterPayWalletFactory", block.chainid);
         address chatterPayProxyAddress;
+        bytes memory initCode;
         if(ChatterPayWalletFactory(chatterPayWalletFactoryAddress).getProxiesCount() > 0){
-          chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).proxies(0);
+            // send userOp without initCode
+            chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).proxies(0);
+            initCode = hex"";
         } else {
-          revert SendPackedUserOp__NoProxyDeployed();
+            // compute new address, send userOp with initCode to create account
+            chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).computeProxyAddress(ANVIL_DEFAULT_USER_2);
+            bytes memory encodedData = abi.encodeWithSignature("createProxy(address)", ANVIL_DEFAULT_USER_2);
+            bytes memory encodedFactory = abi.encodePacked(chatterPayWalletFactoryAddress);
+            initCode = abi.encodePacked(encodedFactory, encodedData);
         }
 
         // Example: approve 1e18 USDC to RANDOM_APPROVER
-        // Must create Proxy address before sending userOp (Qué pasa si la mandamos antes de crear la wallet? Revert?)
         bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, RANDOM_APPROVER, 1e18);
         bytes memory executeCalldata =
             abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+        
         PackedUserOperation memory userOp =
-            generateSignedUserOperation(executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress);
+            generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress);
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
         ops[0] = userOp;
 
         // Send transaction
         vm.startBroadcast();
-        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(helperConfig.getConfig().account));
+        IEntryPoint(config.entryPoint).handleOps(ops, payable(config.account));
         vm.stopBroadcast();
     }
 
     function generateSignedUserOperation(
+        bytes memory initCode,
         bytes memory callData,
         HelperConfig.NetworkConfig memory config,
         address chatterPayProxy
     ) public view returns (PackedUserOperation memory) {
         // 1. Generate the unsigned data
-        uint256 nonce = vm.getNonce(chatterPayProxy) - 1;
-        PackedUserOperation memory userOp = _generateUnsignedUserOperation(callData, chatterPayProxy, nonce);
+        uint256 nonce = vm.getNonce(chatterPayProxy);
+
+        PackedUserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy, nonce);
 
         // 2. Get the userOp Hash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
@@ -65,7 +77,6 @@ contract SendPackedUserOp is Script {
         uint8 v;
         bytes32 r;
         bytes32 s;
-        uint256 ANVIL_DEFAULT_KEY = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
         uint256 ANVIL_DEFAULT_KEY_2 = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
         if (block.chainid == 31337) {
             (v, r, s) = vm.sign(ANVIL_DEFAULT_KEY_2, digest);
@@ -76,7 +87,7 @@ contract SendPackedUserOp is Script {
         return userOp;
     }
 
-    function _generateUnsignedUserOperation(bytes memory callData, address sender, uint256 nonce)
+    function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender, uint256 nonce)
         internal
         pure
         returns (PackedUserOperation memory)
@@ -87,8 +98,8 @@ contract SendPackedUserOp is Script {
         uint128 maxFeePerGas = maxPriorityFeePerGas;
         return PackedUserOperation({
             sender: sender,
-            nonce: nonce,
-            initCode: hex"",
+            nonce: 0,
+            initCode: initCode,
             callData: callData,
             accountGasLimits: bytes32(uint256(verificationGasLimit) << 128 | callGasLimit),
             preVerificationGas: verificationGasLimit,
