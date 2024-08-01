@@ -58,32 +58,41 @@ contract ChatterPay_EntryPoint_Test is Test {
     assertEq(factory.proxies(0), proxy, "Proxy should be stored in the factory");
   }
 
-  function testCreateWalletWithUserOperationInitCode() public {
-    
-  }
+  function testCreateWalletWithUserOperationInitCode() public {}
 
   function testApproveUsdcWithoutInitCode() public {
     vm.startPrank(deployer);
     
     address proxyAddress = createProxyForUser(ANVIL_DEFAULT_USER_2);
     
-    // Assign random ETH to proxy to pay for gas
+    // Assign ETH to proxy for gas
     vm.deal(proxyAddress, 1 ether);
-    // Setup
+    
+    // Set up destination, value and null initCode
     address dest = helperConfig.getConfig().usdc;
     uint256 value = 0;
     bytes memory initCode = hex"";
-    // Example: approve 1e18 USDC to RANDOM_APPROVER
+
+    // Encode approve function call
     bytes memory functionData = abi.encodeWithSelector(usdc.approve.selector, RANDOM_APPROVER, 1e18);
     bytes memory executeCalldata =
         abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+    
+    // Generate signed user operation
     PackedUserOperation memory userOp =
         sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress);
     PackedUserOperation[] memory ops = new PackedUserOperation[](1);
     ops[0] = userOp;
+
+    // Execute handleOps
     IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(proxyAddress));
     
-    assertEq(usdc.allowance(proxyAddress, RANDOM_APPROVER), 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
+    // Check allowance
+    uint256 allowance = ERC20Mock(dest).allowance(proxyAddress, RANDOM_APPROVER);
+    console.log("Allowance after operation:", allowance);
+    
+    // Assert expected allowance
+    assertEq(allowance, 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
     
     vm.stopPrank();
   }
@@ -91,29 +100,42 @@ contract ChatterPay_EntryPoint_Test is Test {
   function testApproveUsdcWithInitCode() public {
     vm.startPrank(deployer);
     
-    // generate initCode
-    // compute new address, send userOp with initCode to create account
+    // Compute new address, send userOp with initCode to create account
     address proxyAddress = factory.computeProxyAddress(ANVIL_DEFAULT_USER_2);
+    console.log("Computed Proxy Address:", proxyAddress);
+    
+    // Generate initCode
     bytes memory encodedData = abi.encodeWithSelector(ChatterPayWalletFactory.createProxy.selector, ANVIL_DEFAULT_USER_2);
     bytes memory encodedFactory = abi.encodePacked(address(factory));
     bytes memory initCode = abi.encodePacked(encodedFactory, encodedData);
 
-    // Assign random ETH to proxy to pay for gas
+    // Assign ETH to proxy for gas
     vm.deal(proxyAddress, 1 ether);
-    // Setup
+    console.log("Assigned ETH to Proxy");
+    
+    // Set up destination and value
     address dest = helperConfig.getConfig().usdc;
     uint256 value = 0;
-    // Example: approve 1e18 USDC to RANDOM_APPROVER
+
+    // Encode approve function call
     bytes memory functionData = abi.encodeWithSelector(usdc.approve.selector, RANDOM_APPROVER, 1e18);
-    bytes memory executeCalldata =
-        abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+    bytes memory executeCalldata = abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+
+    // Generate signed user operation
     PackedUserOperation memory userOp =
         sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress);
     PackedUserOperation[] memory ops = new PackedUserOperation[](1);
     ops[0] = userOp;
-    IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(proxyAddress));
     
-    assertEq(usdc.allowance(proxyAddress, RANDOM_APPROVER), 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
+    // Execute handleOps
+    IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(ops, payable(proxyAddress));
+
+    // Check allowance
+    uint256 allowance = ERC20Mock(dest).allowance(proxyAddress, RANDOM_APPROVER);
+    console.log("Allowance after operation:", allowance);
+    
+    // Assert expected allowance
+    assertEq(allowance, 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
     
     vm.stopPrank();
   }
