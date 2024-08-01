@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-// Pending: change requires for custom errors
-
 pragma solidity ^0.8.24;
 
 import {IChatterPayWalletFactory} from "../L2/ChatterPayWalletFactory.sol";
+
+error L1Keystore__NotAuthorized();
+error L1Keystore__InvalidSalt();
+error L1Keystore__InvalidInitData();
+error L1Keystore__InvalidWalletVersion();
+error L1Keystore__AccountAlreadyExisted();
+error L1Keystore__KeyAlreadyExisted();
+error L1Keystore__InvalidKey();
+error L1Keystore__InvalidOldValue();
+error L1Keystore__WalletAlreadyRegistered();
+error L1Keystore__ImplementationNotRegistered();
 
 contract L1Keystore {
   
@@ -45,7 +54,9 @@ contract L1Keystore {
   //////////////////////////////////////////////////////////////*/
   
   modifier canWrite(address account) {
-    require (msg.sender == account || msg.sender == accounts[account].l2KeyUpdate);
+    if(msg.sender != account && msg.sender != accounts[account].l2KeyUpdate) {
+      revert L1Keystore__NotAuthorized();
+    }
     _;
   }
 
@@ -77,12 +88,13 @@ contract L1Keystore {
       address l2Rollup
   ) public returns (address) {
     // validate inputs
-    require(salt != 0, "invalid salt");
-    require(initKeys.length == initValues.length);
-    require(walletRegistry[walletVersion].owner != address(0), "wallet is not registered");
+    if(salt == 0) revert L1Keystore__InvalidSalt();
+    if(initKeys.length != initValues.length) revert L1Keystore__InvalidInitData();
+    if(walletRegistry[walletVersion].owner == address(0)) revert L1Keystore__InvalidWalletVersion();
     
     address addr = walletFactory.computeProxyAddress(_owner);
-    require(accounts[addr].keys[_SALT_KEY] == 0, "account already existed");
+
+    if(accounts[addr].keys[_SALT_KEY] != bytes32(0)) revert L1Keystore__AccountAlreadyExisted();
     // Write the special keys
     accounts[addr].owner = _owner;
     accounts[addr].keys[_SALT_KEY] = salt;
@@ -103,14 +115,14 @@ contract L1Keystore {
   }
   
   function writeKey(address account, bytes32 key, bytes32 value) public canWrite(account) {  
-    require(accounts[account].keys[key] == bytes32(0));
+    if(accounts[account].keys[key] != bytes32(0)) revert L1Keystore__KeyAlreadyExisted();
     accounts[account].keys[key] = value;
     emit KeyStored(account, key, value);
   }
 
   function updateKey(address account, bytes32 key, bytes32 oldValue, bytes32 newValue) public canWrite(account) {
-    require(key != _SALT_KEY, "salt cannot be updated");
-    require(accounts[account].keys[key] == oldValue);
+    if(key == _SALT_KEY) revert L1Keystore__InvalidKey();
+    if(accounts[account].keys[key] != oldValue) revert L1Keystore__InvalidOldValue();
     accounts[account].keys[key] = newValue;
     emit KeyUpdated(account, key, oldValue, newValue);
   }
@@ -121,8 +133,7 @@ contract L1Keystore {
   }
 
   function registerWallet(bytes32 _walletVersion, address _owner, uint256 _chainId, address _implementation) public {
-    require(walletRegistry[_walletVersion].owner == address(0), "wallet already registered");
-    
+    if(walletRegistry[_walletVersion].owner != address(0)) revert L1Keystore__WalletAlreadyRegistered();
     walletRegistry[_walletVersion].owner = _owner;
     walletRegistry[_walletVersion].implementations[_chainId] = _implementation;
     emit WalletRegistered(_walletVersion, _owner, _chainId, _implementation);
@@ -140,7 +151,7 @@ contract L1Keystore {
     bytes32 walletVersion = accounts[account].keys[_WALLET_VERSION_KEY];
 
     address impl = walletRegistry[walletVersion].implementations[block.chainid];
-    require(impl != address(0), "implementation is not registered");
+    if(impl == address(0)) revert L1Keystore__ImplementationNotRegistered();
     return impl;
   }
 
