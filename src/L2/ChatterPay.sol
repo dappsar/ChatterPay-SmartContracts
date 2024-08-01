@@ -77,18 +77,12 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         uint256 value,
         bytes calldata functionData
     ) external requireFromEntryPointOrOwner {
-        console.log("Executing transaction");
-        console.log("Destination:", dest);
-        // console.log("Function Data:", functionData);
-
         (bool success, bytes memory result) = dest.call{value: value}(
             functionData
         );
         if (!success) {
-            console.log("Execution failed with error:", string(result));
             revert ChatterPay__ExecuteCallFailed(result);
         }
-        console.log("Execution succeeded");
     }
 
     // A signature is valid, if it's the ChatterPay owner

@@ -6,7 +6,6 @@ import {BeaconProxy} from "lib/openzeppelin-contracts/contracts/proxy/beacon/Bea
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
-import {console} from "lib/forge-std/src/Console.sol";
 
 interface IChatterPayWalletFactory {
     function createProxy(address _owner) external returns (address);
