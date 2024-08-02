@@ -15,7 +15,12 @@ error L1Keystore__InvalidOldValue();
 error L1Keystore__WalletAlreadyRegistered();
 error L1Keystore__ImplementationNotRegistered();
 
-contract L1Keystore {
+interface IL1Keystore {
+  function writeKey(address account, bytes32 key, bytes32 value) external;
+  function updateKey(address account, bytes32 key, bytes32 oldValue, bytes32 newValue) external;
+}
+
+contract L1Keystore is IL1Keystore {
   
   struct WalletEntry {
     address owner;
