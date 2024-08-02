@@ -72,6 +72,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     /*//////////////////////////////////////////////////////////////
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    // Generic execute function
     function execute(
         address dest,
         uint256 value,
@@ -84,7 +86,29 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             revert ChatterPay__ExecuteCallFailed(result);
         }
     }
+    
+    function executeTokenTransfer(address dest, bytes calldata functionData) external requireFromEntryPointOrOwner {
+        // TBD: fee calculation
+        (bool success, bytes memory result) = dest.call(
+            functionData
+        );
+        if (!success) {
+            revert ChatterPay__ExecuteCallFailed(result);
+        }
+    }
+    function executeEthTransfer(address dest, uint256 value, bytes calldata functionData) external requireFromEntryPointOrOwner {
+        // TBD: fee calculation
+        (bool success, bytes memory result) = dest.call{value: value}(
+            functionData
+        );
+        if (!success) {
+            revert ChatterPay__ExecuteCallFailed(result);
+        }
+    }
 
+    function swapTokenForToken() external requireFromEntryPointOrOwner {}
+    function swapTokenForEth() external requireFromEntryPointOrOwner {}
+    
     // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(
         PackedUserOperation calldata userOp,
