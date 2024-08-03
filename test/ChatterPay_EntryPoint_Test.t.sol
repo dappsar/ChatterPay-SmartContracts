@@ -8,6 +8,8 @@ import {HelperConfig} from "../script/HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
+import {L1Keystore} from "../src/Ethereum/L1Keystore.sol";
+import {L2Keystore} from "../src/L2/L2Keystore.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, PackedUserOperation, IEntryPoint} from "script/SendPackedUserOp.s.sol";
 
@@ -20,6 +22,8 @@ contract ChatterPay_EntryPoint_Test is Test {
   ChatterPay chatterPay;
   ChatterPayBeacon beacon;
   ChatterPayWalletFactory factory;
+  L1Keystore l1Keystore;
+  L2Keystore l2Keystore;
   ERC20Mock usdc;
   SendPackedUserOp sendPackedUserOp;
   address deployer;
@@ -29,7 +33,7 @@ contract ChatterPay_EntryPoint_Test is Test {
   
   function setUp() public {
     DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
-    (helperConfig, chatterPay, beacon, factory) = deployChatterPay.deployChatterPay();
+    (helperConfig, chatterPay, beacon, factory, l1Keystore, l2Keystore) = deployChatterPay.deployChatterPay();
     deployer = helperConfig.getConfig().account;
     usdc = new ERC20Mock();
     sendPackedUserOp = new SendPackedUserOp();
@@ -178,5 +182,30 @@ contract ChatterPay_EntryPoint_Test is Test {
     assertEq(balance, 1e6, " RANDOM_APPROVER should have a balance of 1e17");
 
     vm.stopPrank();
+  }
+
+  function testStorageSlot() public {
+    
+    // Register Wallet
+    bytes32 walletVersion = bytes32(uint256(1));
+    address owner = ANVIL_DEFAULT_USER;
+    uint256 chainId = block.chainid;
+    address implementation = address(chatterPay);
+    l1Keystore.registerWallet(walletVersion, owner, chainId, implementation);
+    assertEq(l1Keystore.getRegisteredWalletImplementation(walletVersion, chainId), implementation, "Wallet implementation should be registered");
+
+    // Register Account
+    address wallet = l1Keystore.registerAccount(owner, keccak256(abi.encodePacked(owner)), walletVersion, new bytes32[](0), new bytes32[](0), "", address(0), "123");
+    console.log(wallet);
+    
+    bytes32 slot = bytes32(l2Keystore._computeOwnerSlot(wallet));
+    bytes32 l1Slot = vm.load(address(l1Keystore), slot);
+    address l1Owner = address(bytes20(l1Slot));
+    
+    console.log("Slot from l2Keystore: %s", uint256(slot));
+    console.log("Slot from l1Keystore: %s", uint256(l1Slot));
+    console.log("Owner from l1Keystore: %s", l1Owner);
+
+    assert(l1Slot != 0);
   }
 }

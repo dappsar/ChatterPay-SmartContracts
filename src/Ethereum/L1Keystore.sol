@@ -29,17 +29,24 @@ contract L1Keystore is IL1Keystore {
   }
     
   struct UserAccount {
-    // key-value map storage
-    mapping(bytes32 key => bytes32 value) keys;
     // EOA owner of this SCW account
     address owner;
+    // key-value map storage
+    mapping(bytes32 key => bytes32 value) keys;
     // a L2 rollup contract that can update this account
     address l2KeyUpdate;
+    // The user's phone number
+    string userId;
   }
 
   /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
   //////////////////////////////////////////////////////////////*/
+
+  // mapping from AA wallet addr to user account storage
+  mapping(address wallet => UserAccount) accounts;
+  // mapping from wallet version to wallet registration entry
+  mapping(bytes32 walletVersion => WalletEntry) walletRegistry;
 
   IChatterPayWalletFactory walletFactory;
   
@@ -48,11 +55,6 @@ contract L1Keystore is IL1Keystore {
   bytes32 constant _WALLET_VERSION_KEY = keccak256("_WALLET_VERSION_KEY");
   bytes32 constant _INITDATA_HASH_KEY = keccak256("_INITDATA_HASH_KEY");
   bytes32 constant _L2_UPDATE_ADDRESS = keccak256("_L2_UPDATE_ADDRESS");
-
-  // mapping from AA wallet addr to user account storage
-  mapping(address wallet => UserAccount) accounts;
-  // mapping from wallet version to wallet registration entry
-  mapping(bytes32 walletVersion => WalletEntry) walletRegistry;
 
   /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -90,7 +92,8 @@ contract L1Keystore is IL1Keystore {
       bytes32[] memory initKeys,
       bytes32[] memory initValues,
       bytes memory initdata, 
-      address l2Rollup
+      address l2Rollup,
+      string memory _userId
   ) public returns (address) {
     // validate inputs
     if(salt == 0) revert L1Keystore__InvalidSalt();
@@ -102,6 +105,7 @@ contract L1Keystore is IL1Keystore {
     if(accounts[addr].keys[_SALT_KEY] != bytes32(0)) revert L1Keystore__AccountAlreadyExisted();
     // Write the special keys
     accounts[addr].owner = _owner;
+    accounts[addr].userId = _userId;
     accounts[addr].keys[_SALT_KEY] = salt;
     accounts[addr].keys[_WALLET_VERSION_KEY] = walletVersion;
     accounts[addr].keys[_INITDATA_HASH_KEY] = keccak256(initdata);
@@ -148,6 +152,10 @@ contract L1Keystore is IL1Keystore {
                              VIEW FUNCTIONS
   //////////////////////////////////////////////////////////////*/
 
+  function getRegisteredWalletImplementation(bytes32 _walletVersion, uint256 _chainId) public view returns (address) {
+    return walletRegistry[_walletVersion].implementations[_chainId];
+  }
+  
   function loadKey(address account, bytes32 key) public view returns (bytes32) {
     return accounts[account].keys[key];
   }
