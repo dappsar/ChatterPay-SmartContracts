@@ -10,6 +10,8 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {IL2Keystore} from "./L2Keystore.sol";
+
 import {console} from "forge-std/console.sol";
 
 interface IERC20 {
@@ -35,6 +37,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     //////////////////////////////////////////////////////////////*/
 
     IEntryPoint private i_entryPoint;
+    IL2Keystore private i_l2Keystore;
     address constant L1_BLOCKS_ADDRESS =
         0x5300000000000000000000000000000000000001; // Scroll Devnet Only!
     address constant L1_SLOAD_ADDRESS =
@@ -68,12 +71,14 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         address entryPoint,
         address newOwner,
         address _l1Storage,
+        address _l2Storage,
         address _paymaster
     ) public initializer {
         i_entryPoint = IEntryPoint(entryPoint);
         __Ownable_init(newOwner);
         l1StorageAddr = _l1Storage;
         paymaster = _paymaster;
+        i_l2Keystore = IL2Keystore(_l2Storage);
     }
 
     receive() external payable {}
@@ -135,6 +140,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
+        console.log("Signer: %s", signer);
         if (signer != owner()) {
             return SIG_VALIDATION_FAILED;
         }

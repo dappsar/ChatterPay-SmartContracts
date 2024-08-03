@@ -39,6 +39,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     chatterPay = chatterPay;
     beacon = beacon;
     factory = factory;
+    deployer = helperConfig.getConfig().account;
   }
 
   function createProxyForUser(address user) public returns (address) {

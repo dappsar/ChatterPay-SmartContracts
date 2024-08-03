@@ -20,15 +20,16 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     address[] public proxies;
     address immutable entryPoint;
     address public immutable beacon;
-    address immutable l1Storage;
+    address public l1Storage;
+    address public l2Storage;
     address public paymaster;
 
     event ProxyCreated(address indexed owner, address proxyAddress);
 
-    constructor(address _beacon, address _entryPoint, address _owner, address _l1Storage, address _paymaster) Ownable(_owner) {
+    constructor(address _beacon, address _entryPoint, address _owner, address _paymaster) Ownable(_owner) {
+        console.log("ChatterPayWalletFactory deployed with owner: %s", _owner);
         beacon = _beacon;
         entryPoint = _entryPoint;
-        l1Storage = _l1Storage;
         paymaster = _paymaster;
     }
 
@@ -42,6 +43,7 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                 entryPoint,
                 _owner,
                 l1Storage,
+                l2Storage,
                 paymaster
             )
         );
@@ -51,6 +53,11 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         return address(walletProxy);
     }
 
+    function setKeystore(address _l1Storage, address _l2Storage) public onlyOwner {
+        l1Storage = _l1Storage;
+        l2Storage = _l2Storage;
+    }
+    
     function getProxyOwner(address proxy) public returns (bytes memory) {
         (, bytes memory data) = proxy.call(abi.encodeWithSignature("owner()"));
         return data;
@@ -75,6 +82,7 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
             entryPoint,
             _owner,
             l1Storage,
+            l2Storage,
             paymaster
         );
         return abi.encodePacked(

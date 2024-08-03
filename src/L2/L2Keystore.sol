@@ -13,6 +13,10 @@ interface IL1Blocks {
     function latestBlockNumber() external view returns (uint256);
 }
 
+interface IL2Keystore {
+  function l1SloadGetWalletOwner(address wallet) external view returns (address);
+}
+
 contract L2Keystore {
 
   address immutable l1Keystore;
