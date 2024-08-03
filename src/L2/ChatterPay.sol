@@ -12,6 +12,10 @@ import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstrac
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 import {console} from "forge-std/console.sol";
 
+interface IERC20 {
+    function decimals() external view returns (uint8);
+}
+
 interface IL1Blocks {
     function latestBlockNumber() external view returns (uint256);
 }
@@ -24,6 +28,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     error ChatterPay__NotFromEntryPointOrOwner();
     error ChatterPay__ExecuteCallFailed(bytes);
     error ChatterPay__L1SLoadFailed();
+    error ChatterPay__UnsopportedTokenDecimals();
 
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
@@ -35,6 +40,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     address constant L1_SLOAD_ADDRESS =
         0x0000000000000000000000000000000000000101; // Scroll Devnet Only!
     address private l1StorageAddr;
+    uint256 public constant FEE_IN_CENTS = 50; // 50 cents
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -88,7 +94,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     }
     
     function executeTokenTransfer(address dest, bytes calldata functionData) external requireFromEntryPointOrOwner {
-        // TBD: fee calculation
+        uint256 fee = calculateFee(dest, FEE_IN_CENTS);
+
         (bool success, bytes memory result) = dest.call(
             functionData
         );
@@ -96,18 +103,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             revert ChatterPay__ExecuteCallFailed(result);
         }
     }
-    function executeEthTransfer(address dest, uint256 value, bytes calldata functionData) external requireFromEntryPointOrOwner {
-        // TBD: fee calculation
-        (bool success, bytes memory result) = dest.call{value: value}(
-            functionData
-        );
-        if (!success) {
-            revert ChatterPay__ExecuteCallFailed(result);
-        }
-    }
 
-    function swapTokenForToken() external requireFromEntryPointOrOwner {}
-    function swapTokenForEth() external requireFromEntryPointOrOwner {}
+    function executeTokenSwap() external requireFromEntryPointOrOwner {}
     
     // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(
@@ -153,6 +150,23 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     //////////////////////////////////////////////////////////////*/
     function getEntryPoint() external view returns (address) {
         return address(i_entryPoint);
+    }
+
+    function calculateFee(address _token, uint256 _cents) internal returns (uint256) {
+        uint256 decimals = getTokenDecimals(_token);
+        uint256 fee;
+        if(decimals == 6) {
+            fee = _cents * 1e4;
+        } else if(decimals == 18) {
+            fee = _cents * 1e16;
+        } else {
+            revert ChatterPay__UnsopportedTokenDecimals();
+        }
+        return fee;
+    }
+
+    function getTokenDecimals(address token) internal view returns (uint8) {
+        return IERC20(token).decimals();
     }
 
     function latestL1BlockNumber() public view returns (uint256) {
