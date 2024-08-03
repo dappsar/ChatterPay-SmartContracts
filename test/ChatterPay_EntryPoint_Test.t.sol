@@ -140,7 +140,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     vm.stopPrank();
   }
 
-   function testTransferUSDC() public {
+   function testTransferUSDCWithFee() public {
     vm.startPrank(deployer);
     
     address proxyAddress = createProxyForUser(ANVIL_DEFAULT_USER);
@@ -150,26 +150,16 @@ contract ChatterPay_EntryPoint_Test is Test {
     
     // Set up destination, value and null initCode
     address dest = helperConfig.getConfig().usdc;
-    uint256 value = 0;
+    uint256 fee = 500000000000000000; // ERC20 contract with 18 decimals (50 cents)
     bytes memory initCode = hex"";
 
     // Mint USDC to Proxy
     ERC20Mock(dest).mint(proxyAddress, 1e18);
 
-    // Approve USDC to RANDOM_APPROVER
-    ERC20Mock(dest).mockApprove(proxyAddress, RANDOM_APPROVER, 1e18);
-
-    // Check allowance
-    uint256 allowance = ERC20Mock(dest).allowance(proxyAddress, RANDOM_APPROVER);
-    console.log("Allowance after operation:", allowance);
-    
-    // Assert expected allowance
-    assertEq(allowance, 1e18, "Proxy should have approved 1e18 USDC to RANDOM_APPROVER");
-
     // Encode approve function call
-    bytes memory functionData = abi.encodeWithSelector(usdc.transfer.selector, RANDOM_APPROVER, 1e17);
+    bytes memory functionData = abi.encodeWithSelector(usdc.transfer.selector, RANDOM_APPROVER, 1e6);
     bytes memory executeCalldata =
-        abi.encodeWithSelector(ChatterPay.executeTokenTransfer.selector, dest, functionData);
+        abi.encodeWithSelector(ChatterPay.executeTokenTransfer.selector, dest, fee, functionData);
     
     // Generate signed user operation
     PackedUserOperation memory userOp =
@@ -185,7 +175,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     console.log("Balance after operation:", balance);
     
     // Assert expected allowance
-    assertEq(balance, 1e17, " RANDOM_APPROVER should have a balance of 1e17");
+    assertEq(balance, 1e6, " RANDOM_APPROVER should have a balance of 1e17");
 
     vm.stopPrank();
   }

@@ -25,7 +25,8 @@ contract DeployChatterPay_EntryPoint is Script {
     // Deploy Logic
     ChatterPay chatterPay = new ChatterPay{salt: keccak256(abi.encodePacked(config.account))}();
     address l1Storage; // TBD - L1 Keystore Address
-    chatterPay.initialize(config.entryPoint, config.account, l1Storage);
+    address paymaster = address(1); // TBD - Paymaster Address
+    chatterPay.initialize(config.entryPoint, config.account, l1Storage, paymaster);
     console.log("ChatterPay deployed to address %s", address(chatterPay));
     
     // Deploy Beacon (with Logic address)
@@ -33,7 +34,7 @@ contract DeployChatterPay_EntryPoint is Script {
     console.log("ChatterPayBeacon deployed to address %s", address(beacon));
     
     // Deploy Factory (with Beacon & EntryPoint address)
-    ChatterPayWalletFactory factory = new ChatterPayWalletFactory{salt: keccak256(abi.encodePacked(config.account))}(address(beacon), config.entryPoint, config.account, l1Storage);
+    ChatterPayWalletFactory factory = new ChatterPayWalletFactory{salt: keccak256(abi.encodePacked(config.account))}(address(beacon), config.entryPoint, config.account, l1Storage, paymaster);
     console.log("ChatterPayWalletFactory deployed to address %s", address(factory));
     vm.stopBroadcast();
 

@@ -41,6 +41,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         0x0000000000000000000000000000000000000101; // Scroll Devnet Only!
     address private l1StorageAddr;
     uint256 public constant FEE_IN_CENTS = 50; // 50 cents
+    address public paymaster;
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -66,11 +67,13 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     function initialize(
         address entryPoint,
         address newOwner,
-        address _l1Storage
+        address _l1Storage,
+        address _paymaster
     ) public initializer {
         i_entryPoint = IEntryPoint(entryPoint);
         __Ownable_init(newOwner);
         l1StorageAddr = _l1Storage;
+        paymaster = _paymaster;
     }
 
     receive() external payable {}
@@ -93,14 +96,17 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         }
     }
     
-    function executeTokenTransfer(address dest, bytes calldata functionData) external requireFromEntryPointOrOwner {
-        uint256 fee = calculateFee(dest, FEE_IN_CENTS);
-
-        (bool success, bytes memory result) = dest.call(
+    function executeTokenTransfer(address dest, uint256 fee, bytes calldata functionData) external requireFromEntryPointOrOwner {
+        if(fee != calculateFee(dest, FEE_IN_CENTS)) revert ChatterPay__ExecuteCallFailed("Incorrect fee");
+        (bool feeTxSuccess, bytes memory feeTxResult) = dest.call(abi.encodeWithSignature("transfer(address,uint256)", paymaster, fee));
+        if(!feeTxSuccess) {
+            revert ChatterPay__ExecuteCallFailed(feeTxResult);
+        }
+        (bool executeSuccess, bytes memory executeResult) = dest.call(
             functionData
         );
-        if (!success) {
-            revert ChatterPay__ExecuteCallFailed(result);
+        if (!executeSuccess) {
+            revert ChatterPay__ExecuteCallFailed(executeResult);
         }
     }
 
@@ -152,7 +158,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         return address(i_entryPoint);
     }
 
-    function calculateFee(address _token, uint256 _cents) internal returns (uint256) {
+    // Only for Stable Coins for now
+    function calculateFee(address _token, uint256 _cents) internal view returns (uint256) {
         uint256 decimals = getTokenDecimals(_token);
         uint256 fee;
         if(decimals == 6) {

@@ -6,6 +6,7 @@ import {BeaconProxy} from "lib/openzeppelin-contracts/contracts/proxy/beacon/Bea
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
+import {console} from "lib/forge-std/src/console.sol";
 
 interface IChatterPayWalletFactory {
     function createProxy(address _owner) external returns (address);
@@ -20,13 +21,15 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     address immutable entryPoint;
     address public immutable beacon;
     address immutable l1Storage;
+    address public paymaster;
 
     event ProxyCreated(address indexed owner, address proxyAddress);
 
-    constructor(address _beacon, address _entryPoint, address _owner, address _l1Storage) Ownable(_owner) {
+    constructor(address _beacon, address _entryPoint, address _owner, address _l1Storage, address _paymaster) Ownable(_owner) {
         beacon = _beacon;
         entryPoint = _entryPoint;
         l1Storage = _l1Storage;
+        paymaster = _paymaster;
     }
 
     function createProxy(address _owner) public returns (address) {
@@ -38,11 +41,13 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                 ChatterPay.initialize.selector,
                 entryPoint,
                 _owner,
-                l1Storage
+                l1Storage,
+                paymaster
             )
         );
         proxies.push(address(walletProxy));
         emit ProxyCreated(_owner, address(walletProxy));
+        console.log("Proxy created with address: %s", address(walletProxy));
         return address(walletProxy);
     }
 
@@ -69,7 +74,8 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
             ChatterPay.initialize.selector,
             entryPoint,
             _owner,
-            l1Storage
+            l1Storage,
+            paymaster
         );
         return abi.encodePacked(
             type(BeaconProxy).creationCode,
