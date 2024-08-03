@@ -38,10 +38,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
 
     IEntryPoint private i_entryPoint;
     IL2Keystore private i_l2Keystore;
-    address constant L1_BLOCKS_ADDRESS =
-        0x5300000000000000000000000000000000000001; // Scroll Devnet Only!
-    address constant L1_SLOAD_ADDRESS =
-        0x0000000000000000000000000000000000000101; // Scroll Devnet Only!
     address private l1StorageAddr;
     uint256 public constant FEE_IN_CENTS = 50; // 50 cents
     address public paymaster;
@@ -81,11 +77,11 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         i_l2Keystore = IL2Keystore(_l2Storage);
     }
 
-    receive() external payable {}
-
     /*//////////////////////////////////////////////////////////////
                            EXTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
+
+    receive() external payable {}
 
     // Generic execute function
     function execute(
@@ -140,12 +136,10 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
-        console.log("Signer: %s", signer);
         
         if(block.chainid == 2227728){ // If in Scroll Devnet
             // Validate signature by using L1SLOAD & Keystore in L2/L2
             address userWalletOwner = i_l2Keystore.l1SloadGetWalletOwner(address(this));
-            console.log("User Wallet: %s", userWalletOwner);
             if (signer != userWalletOwner) {
                 return SIG_VALIDATION_FAILED;
             }
@@ -191,20 +185,5 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
 
     function getTokenDecimals(address token) internal view returns (uint8) {
         return IERC20(token).decimals();
-    }
-
-    function latestL1BlockNumber() public view returns (uint256) {
-        uint256 l1BlockNum = IL1Blocks(L1_BLOCKS_ADDRESS).latestBlockNumber();
-        return l1BlockNum;
-    }
-
-    function retrieveFromL1() public view returns (uint) {
-        uint256 NUMBER_SLOT; // @dev TBD Slot Number
-        bytes memory input = abi.encodePacked(l1StorageAddr, NUMBER_SLOT);
-        (bool success, bytes memory ret) = L1_SLOAD_ADDRESS.staticcall(input);
-        if (!success) {
-            revert ChatterPay__L1SLoadFailed();
-        }
-        return abi.decode(ret, (uint256));
     }
 }
