@@ -33,8 +33,7 @@ contract ChatterPay_EntryPoint_Test is Test {
   
   function setUp() public {
     DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
-    (helperConfig, chatterPay, beacon, factory, l1Keystore, l2Keystore) = deployChatterPay.deployChatterPay();
-    deployer = helperConfig.getConfig().account;
+    (helperConfig, chatterPay, beacon, factory, l1Keystore, l2Keystore) = deployChatterPay.deployChatterPayL2();
     usdc = new ERC20Mock();
     sendPackedUserOp = new SendPackedUserOp();
     chatterPay = chatterPay;
@@ -196,16 +195,11 @@ contract ChatterPay_EntryPoint_Test is Test {
 
     // Register Account
     address wallet = l1Keystore.registerAccount(owner, keccak256(abi.encodePacked(owner)), walletVersion, new bytes32[](0), new bytes32[](0), "", address(0), "123");
-    console.log(wallet);
     
     bytes32 slot = bytes32(l2Keystore._computeOwnerSlot(wallet));
     bytes32 l1Slot = vm.load(address(l1Keystore), slot);
-    address l1Owner = address(bytes20(l1Slot));
-    
-    console.log("Slot from l2Keystore: %s", uint256(slot));
-    console.log("Slot from l1Keystore: %s", uint256(l1Slot));
-    console.log("Owner from l1Keystore: %s", l1Owner);
+    address l1Owner = address(uint160(uint256(l1Slot)));
 
-    assert(l1Slot != 0);
+    assertEq(l1Owner, ANVIL_DEFAULT_USER, "Owner should be the wallet");
   }
 }

@@ -13,10 +13,14 @@ import {L2Keystore} from "../src/L2/L2Keystore.sol";
 contract DeployChatterPay_EntryPoint is Script {
 
   function run() public {
-    deployChatterPay();
+    if(block.chainid == 11155111){
+      deployMainnet();
+    } else {
+      deployChatterPayL2();
+    }
   }
 
-  function deployChatterPay() public returns (HelperConfig, ChatterPay, ChatterPayBeacon, ChatterPayWalletFactory, L1Keystore, L2Keystore) {
+  function deployChatterPayL2() public returns (HelperConfig, ChatterPay, ChatterPayBeacon, ChatterPayWalletFactory, L1Keystore, L2Keystore){
     // Deploy HelperConfig
     HelperConfig helperConfig = new HelperConfig();
     HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
@@ -49,6 +53,22 @@ contract DeployChatterPay_EntryPoint is Script {
 
 
     return (helperConfig, chatterPay, beacon, factory, l1Keystore, l2Keystore);
+  }
+
+  function deployMainnet() public returns (L1Keystore){
+    HelperConfig helperConfig = new HelperConfig();
+    HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
+    address factory;
+    
+    vm.startBroadcast(config.account);
+    console.log("Deploying ChatterPay contracts in chainId %s with account: %s", block.chainid, config.account);
+
+    // Deploy L1Keystore & L2Keystore
+    L1Keystore l1Keystore = new L1Keystore(address(factory));
+    console.log("L1Keystore deployed to address %s", address(l1Keystore));
+
+    vm.stopBroadcast();
+    return l1Keystore;
   }
 
 }
