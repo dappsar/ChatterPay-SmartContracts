@@ -1,8 +1,9 @@
-![](https://img.shields.io/badge/Solidity-informational?style=flat&logo=solidity&logoColor=white&color=363636)
-![](https://img.shields.io/badge/Foundry-informational?style=flat&logo=foundry&logoColor=white&color=1b1f23)
-![](https://img.shields.io/badge/Blockchain-informational?style=flat&logo=blockchain&logoColor=white&color=3b3b3b)
-![](https://img.shields.io/badge/Smart_Contracts-informational?style=flat&logo=smartcontracts&logoColor=white&color=4c4c4c)
-
+![](https://img.shields.io/badge/Solidity-informational?style=flat&logo=solidity&logoColor=white&color=6aa6f8)
+![](https://img.shields.io/badge/Foundry-informational?style=flat&logo=foundry&logoColor=white&color=6aa6f8)
+![](https://img.shields.io/badge/Blockchain-informational?style=flat&logo=blockchain&logoColor=white&color=6aa6f8)
+![](https://img.shields.io/badge/Smart_Contracts-informational?style=flat&logo=smartcontracts&logoColor=white&color=6aa6f8)
+![](https://img.shields.io/badge/api3-informational?style=flat&logo=api3&logoColor=white&color=6aa6f8)
+![](https://img.shields.io/badge/scroll_L2-informational?style=flat&logo=scroll&logoColor=white&color=6aa6f8)
 
 # ChatterPay
 
@@ -33,7 +34,10 @@ __Build With__:
 
 - Framework: [Foundry](https://github.com/foundry-rs/foundry)
 - Language: [Solidity](https://solidity-es.readthedocs.io/)
-
+- Smart Contracts Library: [OpenZeppelin](https://www.openzeppelin.com/)
+- L2 Blockchain: [Scroll](https://github.com/scroll-tech)
+- Account Abstraction L2 Keystore: [Scroll L1SLOAD](https://dev.to/turupawn/l1sload-el-nuevo-opcode-para-keystores-seguras-y-escalables-50of)
+- Web3 Data Feed: [api3](https://api3.org/)
 
 # Getting Started
 
