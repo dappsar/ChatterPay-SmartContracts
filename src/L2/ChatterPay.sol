@@ -136,12 +136,14 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         PackedUserOperation calldata userOp,
         bytes32 userOpHash
     ) internal view returns (uint256 validationData) {
+        // Validate signature by using L1SLOAD & Keystore in both L2/L1
+        address userWalletOwner = i_l2Keystore.l1SloadGetWalletOwner(address(this));
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
-        console.log("Signer: %s", signer);
-        if (signer != owner()) {
+
+        if (signer != userWalletOwner) {
             return SIG_VALIDATION_FAILED;
         }
         return SIG_VALIDATION_SUCCESS;
