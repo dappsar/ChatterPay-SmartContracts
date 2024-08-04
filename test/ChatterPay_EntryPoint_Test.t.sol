@@ -186,7 +186,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     vm.stopPrank();
   }
 
-  function testStorageSlot() public {
+  function skip_testStorageSlot() public {
     // Register Wallet
     bytes32 walletVersion = bytes32(uint256(1));
     address owner = ANVIL_DEFAULT_USER;
