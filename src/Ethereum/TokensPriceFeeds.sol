@@ -4,15 +4,21 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "lib/api3-contracts/contracts/api3-server-v1/proxies/interfaces/IProxy.sol";
 
+interface ITokensPriceFeeds {
+    function readDataFeed(address _proxy) external view returns (uint256 price, uint256 timestamp);
+    function ETH_USD_Proxy() external view returns (address);
+    function BTC_USD_Proxy() external view returns (address);
+}
+
 contract TokensPriceFeeds is Ownable {
     
     error TokensPriceFeeds__ValueNotPositive();
     error TokensPriceFeeds__TimestampTooOld();
     error TokenPriceFeeds___InvalidAddress();
 
-    // 0x8A753747A1Fa494EC906cE90E9f37563A8AF630e;
+    // 0xa47Fd122b11CdD7aad7c3e8B740FB91D83Ce43D1 for Scroll Sepolia
     address public ETH_USD_Proxy;
-    // 0xECe365B379E1dD183B20fc5f022230C044d51404    
+    // 0x81A64473D102b38eDcf35A7675654768D11d7e24 for Scroll Sepolia
     address public BTC_USD_Proxy;
 
     event ProxyAddressSet(address proxyAddress);
