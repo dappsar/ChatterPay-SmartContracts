@@ -41,6 +41,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     address private l1StorageAddr;
     uint256 public constant FEE_IN_CENTS = 50; // 50 cents
     address public paymaster;
+    address constant BACKEND = 0xe54b48F8caF88a08849dCdDE3D3d41Cd6D7ab369;
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -53,7 +54,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     }
 
     modifier requireFromEntryPointOrOwner() {
-        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
+        if (msg.sender != address(i_entryPoint) && msg.sender != owner() && msg.sender != BACKEND) {
             revert ChatterPay__NotFromEntryPointOrOwner();
         }
         _;

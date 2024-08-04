@@ -24,7 +24,7 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     address public l2Storage;
     address public paymaster;
 
-    event ProxyCreated(address indexed owner, address proxyAddress);
+    event ProxyCreated(address indexed owner, address indexed proxyAddress);
 
     constructor(address _beacon, address _entryPoint, address _owner, address _paymaster) Ownable(_owner) {
         console.log("ChatterPayWalletFactory deployed with owner: %s", _owner);

@@ -29,7 +29,7 @@ __Components__:
 
 This repository contains the source code of the Smart Contracts.
 
-[](https://storage.googleapis.com/taikai-storage/images/4a977210-525d-11ef-aaf3-1f97976fa8b8ChatterPay%20Smart%20Contracts%20Flow.png)
+![ChatterPay Smart Contracts Workflow](imgs/ChatterPay%20Smart%20Contracts%20Flow.png)
 
 
 __Build With__:
