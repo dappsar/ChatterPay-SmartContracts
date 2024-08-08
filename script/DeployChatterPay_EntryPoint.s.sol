@@ -29,7 +29,6 @@ contract DeployChatterPay_EntryPoint is Script {
       ChatterPay chatterPay = new ChatterPay{
           salt: keccak256(abi.encodePacked(config.account))
       }();
-      address paymaster = address(1); // TBD - Paymaster Address
       console.log(
           "ChatterPay deployed to address %s",
           address(chatterPay)
@@ -83,7 +82,6 @@ contract DeployChatterPay_EntryPoint is Script {
             chatterPay = new ChatterPay{
                 salt: keccak256(abi.encodePacked(config.account))
             }();
-            address paymaster = address(1); // TBD - Paymaster Address
             console.log(
                 "ChatterPay deployed to address %s",
                 address(chatterPay)
@@ -97,7 +95,8 @@ contract DeployChatterPay_EntryPoint is Script {
                 "ChatterPayBeacon deployed to address %s",
                 address(beacon)
             );
-
+            
+            address paymaster = address(1); // TBD - Paymaster Address
             // Deploy Factory (with Beacon & EntryPoint address)
             factory = new ChatterPayWalletFactory{
                 salt: keccak256(abi.encodePacked(config.account))

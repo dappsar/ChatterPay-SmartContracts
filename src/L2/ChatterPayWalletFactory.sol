@@ -2,11 +2,19 @@
 
 pragma solidity ^0.8.24;
 
+/*//////////////////////////////////////////////////////////////
+                            IMPORTS
+//////////////////////////////////////////////////////////////*/
+
 import {BeaconProxy} from "lib/openzeppelin-contracts/contracts/proxy/beacon/BeaconProxy.sol";
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
 import {console} from "lib/forge-std/src/console.sol";
+
+/*//////////////////////////////////////////////////////////////
+                            INTERFACES
+//////////////////////////////////////////////////////////////*/
 
 interface IChatterPayWalletFactory {
     function createProxy(address _owner) external returns (address);
@@ -16,7 +24,16 @@ interface IChatterPayWalletFactory {
     function getProxiesCount() external view returns (uint256);
 }
 
+/*//////////////////////////////////////////////////////////////
+                            CONTRACT
+//////////////////////////////////////////////////////////////*/
+
 contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
+
+    /*//////////////////////////////////////////////////////////////
+                            STATE VARIABLES
+    //////////////////////////////////////////////////////////////*/
+
     address[] public proxies;
     address immutable entryPoint;
     address public immutable beacon;
@@ -24,7 +41,15 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     address public l2Storage;
     address public paymaster;
 
+    /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
+
     event ProxyCreated(address indexed owner, address indexed proxyAddress);
+
+    /*//////////////////////////////////////////////////////////////
+                               FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     constructor(address _beacon, address _entryPoint, address _owner, address _paymaster) Ownable(_owner) {
         console.log("ChatterPayWalletFactory deployed with owner: %s", _owner);
@@ -32,6 +57,10 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         entryPoint = _entryPoint;
         paymaster = _paymaster;
     }
+
+    /*//////////////////////////////////////////////////////////////
+                            PUBLIC FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
 
     function createProxy(address _owner) public returns (address) {
         BeaconProxy walletProxy = new BeaconProxy{
@@ -76,6 +105,10 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         return address(uint160(uint256(hash)));
     }
 
+    /*//////////////////////////////////////////////////////////////
+                           INTERNAL FUNCTIONS
+    //////////////////////////////////////////////////////////////*/
+
     function getProxyBytecode(address _owner) internal view returns (bytes memory) {
         bytes memory initializationCode = abi.encodeWithSelector(
             ChatterPay.initialize.selector,
@@ -90,6 +123,10 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
             abi.encode(beacon, initializationCode)
         );
     }
+
+    /*//////////////////////////////////////////////////////////////
+                                GETTERS
+    //////////////////////////////////////////////////////////////*/
 
     function getProxies() public view returns (address[] memory) {
         return proxies;
