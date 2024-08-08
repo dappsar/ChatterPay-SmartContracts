@@ -21,6 +21,22 @@ contract DeployChatterPay_EntryPoint is Script {
         deployChatterPay();
     }
 
+    function deployChatterPayOnly() public returns(ChatterPay){
+      // Deploy HelperConfig
+      HelperConfig helperConfig = new HelperConfig();
+      HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
+      // Deploy Logic
+      ChatterPay chatterPay = new ChatterPay{
+          salt: keccak256(abi.encodePacked(config.account))
+      }();
+      address paymaster = address(1); // TBD - Paymaster Address
+      console.log(
+          "ChatterPay deployed to address %s",
+          address(chatterPay)
+      );
+      return chatterPay;
+    }
+
     function deployChatterPay()
         public
         returns (

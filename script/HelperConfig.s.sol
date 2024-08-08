@@ -26,6 +26,7 @@ contract HelperConfig is Script {
     //////////////////////////////////////////////////////////////*/
     uint256 constant ETHEREUM_SEPOLIA_CHAIN_ID = 11155111;
     uint256 constant SCROLL_DEVNET_CHAIN_ID = 2227728;
+    uint256 constant SCROLL_SEPOLIA_CHAIN_ID = 534351;
     uint256 constant ARBITRUM_SEPOLIA_CHAIN_ID = 421614;
     uint256 constant OPTIMISM_SEPOLIA_CHAIN_ID = 11155420;
     uint256 constant LOCAL_CHAIN_ID = 31337;
@@ -41,7 +42,8 @@ contract HelperConfig is Script {
     //////////////////////////////////////////////////////////////*/
     constructor() {
         networkConfigs[ETHEREUM_SEPOLIA_CHAIN_ID] = getEthereumSepoliaConfig();
-        networkConfigs[SCROLL_DEVNET_CHAIN_ID] = getScrollSepoliaConfig();
+        networkConfigs[SCROLL_SEPOLIA_CHAIN_ID] = getScrollSepoliaConfig();
+        networkConfigs[SCROLL_DEVNET_CHAIN_ID] = getScrollDevnetConfig();
         networkConfigs[ARBITRUM_SEPOLIA_CHAIN_ID] = getArbitrumSepoliaConfig();
         networkConfigs[OPTIMISM_SEPOLIA_CHAIN_ID] = getOptimismSepoliaConfig();
     }
@@ -56,6 +58,7 @@ contract HelperConfig is Script {
         } else if (networkConfigs[chainId].account != address(0)) {
             return networkConfigs[chainId];
         } else {
+            console.log("Invalid chainId: %s", chainId);
             revert HelperConfig__InvalidChainId();
         }
     }
@@ -77,6 +80,15 @@ contract HelperConfig is Script {
         return NetworkConfig({
             entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
             usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
+            usdt: 0x0000000000000000000000000000000000000000, // address TBD
+            account: BURNER_WALLET
+        });
+    }
+
+    function getScrollDevnetConfig() public pure returns (NetworkConfig memory) {
+        return NetworkConfig({
+            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+            usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
             usdt: 0x0000000000000000000000000000000000000000, // address TBD
             account: BURNER_WALLET
         });
