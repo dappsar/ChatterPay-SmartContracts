@@ -2,7 +2,15 @@
 
 pragma solidity ^0.8.24;
 
+/*//////////////////////////////////////////////////////////////
+                            IMPORTS
+//////////////////////////////////////////////////////////////*/
+
 import {IChatterPayWalletFactory} from "../L2/ChatterPayWalletFactory.sol";
+
+/*//////////////////////////////////////////////////////////////
+                              ERRORS
+//////////////////////////////////////////////////////////////*/
 
 error L1Keystore__NotAuthorized();
 error L1Keystore__InvalidSalt();
@@ -15,10 +23,18 @@ error L1Keystore__InvalidOldValue();
 error L1Keystore__WalletAlreadyRegistered();
 error L1Keystore__ImplementationNotRegistered();
 
+/*//////////////////////////////////////////////////////////////
+                            INTERFACES
+//////////////////////////////////////////////////////////////*/
+
 interface IL1Keystore {
   function writeKey(address account, bytes32 key, bytes32 value) external;
   function updateKey(address account, bytes32 key, bytes32 oldValue, bytes32 newValue) external;
 }
+
+/*//////////////////////////////////////////////////////////////
+                            CONTRACT
+//////////////////////////////////////////////////////////////*/
 
 contract L1Keystore is IL1Keystore {
   
@@ -84,6 +100,10 @@ contract L1Keystore is IL1Keystore {
   constructor(address _accountFactory) {
     walletFactory = IChatterPayWalletFactory(_accountFactory);
   }
+
+  /*//////////////////////////////////////////////////////////////
+                          PUBLIC FUNCTIONS
+  //////////////////////////////////////////////////////////////*/
 
   function registerAccount(
       address _owner,
