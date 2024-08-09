@@ -122,10 +122,14 @@ contract HelperConfig is Script {
         vm.startBroadcast(ANVIL_DEFAULT_ACCOUNT);
         EntryPoint entryPoint = new EntryPoint();
         console.log("EntryPoint deployed! %s", address(entryPoint));
-        ERC20Mock usdcMock = new ERC20Mock();
-        console.log("ERC20Mock deployed! %s", address(usdcMock));
-        ERC20Mock usdtMock = new ERC20Mock();
-        console.log("ERC20Mock deployed! %s", address(usdtMock));
+        ERC20Mock usdcMock = new ERC20Mock("USDC Coin", "USDC");
+        console.log("USDC deployed! %s", address(usdcMock));
+        ERC20Mock usdtMock = new ERC20Mock("Tether USD", "USDT");
+        console.log("USDT deployed! %s", address(usdtMock));
+        ERC20Mock wethMock = new ERC20Mock("Wrapped Ether", "WETH");
+        console.log("WETH deployed! %s", address(wethMock));
+        ERC20Mock maticMock = new ERC20Mock("Matic Token", "MATIC");
+        console.log("MATIC deployed! %s", address(maticMock));
         vm.stopBroadcast();
         console.log("Mocks deployed!");
 
