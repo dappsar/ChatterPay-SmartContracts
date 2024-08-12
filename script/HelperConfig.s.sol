@@ -18,6 +18,8 @@ contract HelperConfig is Script {
         address entryPoint;
         address usdc;
         address usdt;
+        address weth;
+        address matic;
         address account;
     }
 
@@ -32,7 +34,8 @@ contract HelperConfig is Script {
     uint256 constant LOCAL_CHAIN_ID = 31337;
     address constant BURNER_WALLET = 0x08f88ef7ecD64a2eA1f3887d725F78DDF1bacDF1;
     // address constant FOUNDRY_DEFAULT_WALLET = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
-    address constant ANVIL_DEFAULT_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
+    address constant ANVIL_DEFAULT_ACCOUNT =
+        0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 
     NetworkConfig public localNetworkConfig;
     mapping(uint256 chainId => NetworkConfig) public networkConfigs;
@@ -52,7 +55,9 @@ contract HelperConfig is Script {
         return getConfigByChainId(block.chainid);
     }
 
-    function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
+    function getConfigByChainId(
+        uint256 chainId
+    ) public returns (NetworkConfig memory) {
         if (chainId == LOCAL_CHAIN_ID) {
             return getOrCreateAnvilEthConfig();
         } else if (networkConfigs[chainId].account != address(0)) {
@@ -67,49 +72,84 @@ contract HelperConfig is Script {
                                 CONFIGS
     //////////////////////////////////////////////////////////////*/
 
-    function getEthereumSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
-            usdc: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238,
-            usdt: 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06,
-            account: BURNER_WALLET
-        });
+    function getEthereumSepoliaConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        return
+            NetworkConfig({
+                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                usdc: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238,
+                usdt: 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06,
+                weth: 0x0000000000000000000000000000000000000000, // address TBD
+                matic: 0x0000000000000000000000000000000000000000, // address TBD
+                account: BURNER_WALLET
+            });
     }
 
-    function getArbitrumSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
-            usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
-            usdt: 0x0000000000000000000000000000000000000000, // address TBD
-            account: BURNER_WALLET
-        });
+    function getArbitrumSepoliaConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        return
+            NetworkConfig({
+                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
+                usdt: 0x0000000000000000000000000000000000000000, // address TBD
+                weth: 0x0000000000000000000000000000000000000000, // address TBD
+                matic: 0x0000000000000000000000000000000000000000, // address TBD
+                account: BURNER_WALLET
+            });
     }
 
-    function getScrollDevnetConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
-            usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
-            usdt: 0x0000000000000000000000000000000000000000, // address TBD
-            account: BURNER_WALLET
-        });
+    function getScrollDevnetConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        return
+            NetworkConfig({
+                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
+                usdt: 0x0000000000000000000000000000000000000000, // address TBD
+                weth: 0x0000000000000000000000000000000000000000, // address TBD
+                matic: 0x0000000000000000000000000000000000000000, // address TBD
+                account: BURNER_WALLET
+            });
     }
 
-    function getScrollSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
-            usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
-            usdt: 0x0000000000000000000000000000000000000000, // address TBD
-            account: BURNER_WALLET
-        });
+    function getScrollSepoliaConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        return
+            NetworkConfig({
+                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
+                usdt: 0x0000000000000000000000000000000000000000, // address TBD
+                weth: 0x0000000000000000000000000000000000000000, // address TBD
+                matic: 0x0000000000000000000000000000000000000000, // address TBD
+                account: BURNER_WALLET
+            });
     }
 
-    function getOptimismSepoliaConfig() public pure returns (NetworkConfig memory) {
-        return NetworkConfig({
-            entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
-            usdc: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7,
-            usdt: 0x0000000000000000000000000000000000000000, // address TBD
-            account: BURNER_WALLET
-        });
+    function getOptimismSepoliaConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        return
+            NetworkConfig({
+                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                usdc: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7,
+                usdt: 0x0000000000000000000000000000000000000000, // address TBD
+                weth: 0x0000000000000000000000000000000000000000, // address TBD
+                matic: 0x0000000000000000000000000000000000000000, // address TBD
+                account: BURNER_WALLET
+            });
     }
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
@@ -133,8 +173,14 @@ contract HelperConfig is Script {
         vm.stopBroadcast();
         console.log("Mocks deployed!");
 
-        localNetworkConfig =
-            NetworkConfig({entryPoint: address(entryPoint), usdc: address(usdcMock), usdt: address(usdtMock), account: ANVIL_DEFAULT_ACCOUNT});
+        localNetworkConfig = NetworkConfig({
+            entryPoint: address(entryPoint),
+            usdc: address(usdcMock),
+            usdt: address(usdtMock),
+            weth: address(wethMock),
+            matic: address(maticMock),
+            account: ANVIL_DEFAULT_ACCOUNT
+        });
         return localNetworkConfig;
     }
 }

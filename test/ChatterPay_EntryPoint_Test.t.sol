@@ -36,7 +36,7 @@ contract ChatterPay_EntryPoint_Test is Test {
   function setUp() public {
     DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
     (helperConfig, chatterPay, beacon, factory, l1Keystore, l2Keystore, tokensPriceFeeds) = deployChatterPay.deployChatterPay();
-    usdc = new ERC20Mock();
+    usdc = ERC20Mock(helperConfig.getConfig().usdc);
     sendPackedUserOp = new SendPackedUserOp();
     chatterPay = chatterPay;
     beacon = beacon;
