@@ -11,6 +11,7 @@ import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
 import {L1Keystore} from "../src/Ethereum/L1Keystore.sol";
 import {L2Keystore} from "../src/L2/L2Keystore.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
+import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, PackedUserOperation, IEntryPoint} from "script/SendPackedUserOp.s.sol";
 
@@ -26,6 +27,7 @@ contract ChatterPay_EntryPoint_Test is Test {
   L1Keystore l1Keystore;
   L2Keystore l2Keystore;
   TokensPriceFeeds tokensPriceFeeds;
+  ChatterPayNFT chatterPayNFT;
   ERC20Mock usdc;
   SendPackedUserOp sendPackedUserOp;
   address deployer;
@@ -35,7 +37,8 @@ contract ChatterPay_EntryPoint_Test is Test {
   
   function setUp() public {
     DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
-    (helperConfig, chatterPay, beacon, factory, l1Keystore, l2Keystore, tokensPriceFeeds) = deployChatterPay.deployChatterPay();
+    (helperConfig, chatterPay, beacon, factory, l2Keystore, tokensPriceFeeds, chatterPayNFT) = deployChatterPay.deployChatterPayOnL2();
+    l1Keystore = deployChatterPay.deployL1Keystore();
     usdc = ERC20Mock(helperConfig.getConfig().usdc);
     sendPackedUserOp = new SendPackedUserOp();
     chatterPay = chatterPay;
