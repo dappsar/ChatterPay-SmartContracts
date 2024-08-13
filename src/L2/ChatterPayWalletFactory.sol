@@ -13,6 +13,12 @@ import {ChatterPay} from "./ChatterPay.sol";
 import {console} from "lib/forge-std/src/console.sol";
 
 /*//////////////////////////////////////////////////////////////
+                                ERRORS
+//////////////////////////////////////////////////////////////*/
+
+error ChatterPayWalletFactory__InvalidOwner();
+
+/*//////////////////////////////////////////////////////////////
                             INTERFACES
 //////////////////////////////////////////////////////////////*/
 
@@ -63,6 +69,7 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     //////////////////////////////////////////////////////////////*/
 
     function createProxy(address _owner) public returns (address) {
+        if(_owner == address(0)) revert ChatterPayWalletFactory__InvalidOwner();
         BeaconProxy walletProxy = new BeaconProxy{
             salt: keccak256(abi.encodePacked(_owner))
         }(
@@ -78,7 +85,6 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         );
         proxies.push(address(walletProxy));
         emit ProxyCreated(_owner, address(walletProxy));
-        console.log("Proxy created with address: %s", address(walletProxy));
         return address(walletProxy);
     }
 
