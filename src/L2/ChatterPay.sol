@@ -64,6 +64,12 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     string[2] public s_supportedNotStableTokens;
 
     /*//////////////////////////////////////////////////////////////
+                                 EVENTS
+    //////////////////////////////////////////////////////////////*/
+
+    event TokenTransfer(address indexed dest, uint256 indexed fee, bytes functionData);
+
+    /*//////////////////////////////////////////////////////////////
                                MODIFIERS
     //////////////////////////////////////////////////////////////*/
 
@@ -128,18 +134,21 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     ) external requireFromEntryPointOrOwner {
         if (fee != calculateFee(dest, FEE_IN_CENTS))
             revert ChatterPay__ExecuteCallFailed("Incorrect fee");
+        
         (bool feeTxSuccess, bytes memory feeTxResult) = dest.call(
             abi.encodeWithSignature("transfer(address,uint256)", paymaster, fee)
         );
         if (!feeTxSuccess) {
             revert ChatterPay__ExecuteCallFailed(feeTxResult);
         }
+
         (bool executeSuccess, bytes memory executeResult) = dest.call(
             functionData
         );
         if (!executeSuccess) {
             revert ChatterPay__ExecuteCallFailed(executeResult);
         }
+        emit TokenTransfer(dest, fee, functionData);
     }
 
     function executeTokenSwap() external requireFromEntryPointOrOwner {} // TBD
