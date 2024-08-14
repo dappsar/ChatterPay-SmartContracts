@@ -23,7 +23,8 @@ contract SendPackedUserOp is Script {
         // Setup
         HelperConfig helperConfig = new HelperConfig();
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
-        address ANVIL_DEFAULT_USER_2 = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+        address ANVIL_DEFAULT_USER = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+        uint256 ANVIL_DEFAUL_USER_KEY = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
 
         address dest = config.usdc;
         uint256 value = 0;
@@ -36,8 +37,8 @@ contract SendPackedUserOp is Script {
             initCode = hex"";
         } else {
             // compute new address, send userOp with initCode to create account
-            chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).computeProxyAddress(ANVIL_DEFAULT_USER_2);
-            bytes memory encodedData = abi.encodeWithSignature("createProxy(address)", ANVIL_DEFAULT_USER_2);
+            chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).computeProxyAddress(ANVIL_DEFAULT_USER);
+            bytes memory encodedData = abi.encodeWithSignature("createProxy(address)", ANVIL_DEFAULT_USER);
             bytes memory encodedFactory = abi.encodePacked(chatterPayWalletFactoryAddress);
             initCode = abi.encodePacked(encodedFactory, encodedData);
         }
@@ -49,7 +50,7 @@ contract SendPackedUserOp is Script {
         bytes memory executeCalldata = abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
         
         PackedUserOperation memory userOp =
-            generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress);
+            generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress, ANVIL_DEFAUL_USER_KEY);
         PackedUserOperation[] memory ops = new PackedUserOperation[](1);
         ops[0] = userOp;
 
@@ -63,7 +64,8 @@ contract SendPackedUserOp is Script {
         bytes memory initCode,
         bytes memory callData,
         HelperConfig.NetworkConfig memory config,
-        address chatterPayProxy
+        address chatterPayProxy,
+        uint256 key
     ) public view returns (PackedUserOperation memory) {
         // 1. Generate the unsigned data
         // uint256 nonce = vm.getNonce(chatterPayProxy);
@@ -78,9 +80,8 @@ contract SendPackedUserOp is Script {
         uint8 v;
         bytes32 r;
         bytes32 s;
-        uint256 ANVIL_DEFAULT_KEY_2 = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
         if (block.chainid == 31337) {
-            (v, r, s) = vm.sign(ANVIL_DEFAULT_KEY_2, digest);
+            (v, r, s) = vm.sign(key, digest);
         } else {
             (v, r, s) = vm.sign(config.account, digest);
         }

@@ -97,7 +97,7 @@ contract HelperConfig is Script {
             NetworkConfig({
                 entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
                 usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
-                usdt: 0x0000000000000000000000000000000000000000, // address TBD
+                usdt: 0x961bf3bf61d3446907E0Db83C9c5D958c17A94f6, // address TBD
                 weth: 0x0000000000000000000000000000000000000000, // address TBD
                 matic: 0x0000000000000000000000000000000000000000, // address TBD
                 account: BURNER_WALLET

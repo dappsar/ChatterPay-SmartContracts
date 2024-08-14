@@ -34,6 +34,7 @@ contract ChatterPay_EntryPoint_Test is Test {
   address RANDOM_USER = makeAddr("randomUser");
   address RANDOM_APPROVER = makeAddr("RANDOM_APPROVER");
   address ANVIL_DEFAULT_USER = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
+  uint256 ANVIL_DEFAUL_USER_KEY = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
   
   function setUp() public {
     DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
@@ -67,6 +68,12 @@ contract ChatterPay_EntryPoint_Test is Test {
     assertEq(factory.proxies(0), proxy, "Proxy should be stored in the factory");
   }
 
+  function testComputeAddressMustBeEqualToCreateProxyAddress() public {
+    address proxy = factory.createProxy(RANDOM_USER);
+    address computedProxy = factory.computeProxyAddress(RANDOM_USER);
+    assertEq(proxy, computedProxy, "Computed proxy address should be equal to created proxy address");
+  }
+
   function testCreateWalletWithUserOperationInitCode() public {}
 
   function testApproveUsdcWithoutInitCode() public {
@@ -89,7 +96,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     
     // Generate signed user operation
     PackedUserOperation memory userOp =
-        sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress);
+        sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress, ANVIL_DEFAUL_USER_KEY);
     PackedUserOperation[] memory ops = new PackedUserOperation[](1);
     ops[0] = userOp;
 
@@ -132,7 +139,7 @@ contract ChatterPay_EntryPoint_Test is Test {
 
     // Generate signed user operation
     PackedUserOperation memory userOp =
-        sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress);
+        sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress, ANVIL_DEFAUL_USER_KEY);
     PackedUserOperation[] memory ops = new PackedUserOperation[](1);
     ops[0] = userOp;
     
@@ -172,7 +179,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     
     // Generate signed user operation
     PackedUserOperation memory userOp =
-        sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress);
+        sendPackedUserOp.generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), proxyAddress, ANVIL_DEFAUL_USER_KEY);
     PackedUserOperation[] memory ops = new PackedUserOperation[](1);
     ops[0] = userOp;
 
