@@ -165,7 +165,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     // Mint USDC to Proxy
     ERC20Mock(dest).mint(proxyAddress, 1e18);
 
-    // Encode approve function call
+    // Encode transfer function call
     bytes memory functionData = abi.encodeWithSelector(usdc.transfer.selector, RANDOM_APPROVER, 1e6);
     bytes memory executeCalldata =
         abi.encodeWithSelector(ChatterPay.executeTokenTransfer.selector, dest, fee, functionData);

@@ -67,7 +67,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event TokenTransfer(address indexed dest, uint256 indexed fee, bytes functionData);
+    event Execution(address indexed wallet, address indexed dest, uint256 indexed value, bytes functionData);
+    event TokenTransfer(address indexed wallet, address indexed dest, uint256 indexed fee, bytes functionData);
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -125,6 +126,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         if (!success) {
             revert ChatterPay__ExecuteCallFailed(result);
         }
+        emit Execution(address(this), dest, value, functionData);
     }
 
     function executeTokenTransfer(
@@ -148,10 +150,12 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         if (!executeSuccess) {
             revert ChatterPay__ExecuteCallFailed(executeResult);
         }
-        emit TokenTransfer(dest, fee, functionData);
+        emit TokenTransfer(address(this), dest, fee, functionData);
     }
 
-    function executeTokenSwap() external requireFromEntryPointOrOwner {} // TBD
+    function executeTokenSwap() external requireFromEntryPointOrOwner {
+
+    }
 
     // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(

@@ -43,9 +43,10 @@ contract SendPackedUserOp is Script {
         }
 
         // Example: approve 1e18 USDC to RANDOM_APPROVER
+        // this is the function called by the wallet
         bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, RANDOM_APPROVER, 1e18);
-        bytes memory executeCalldata =
-            abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+        // this is the function on the wallet called by the entrypoint
+        bytes memory executeCalldata = abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
         
         PackedUserOperation memory userOp =
             generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress);
@@ -65,9 +66,9 @@ contract SendPackedUserOp is Script {
         address chatterPayProxy
     ) public view returns (PackedUserOperation memory) {
         // 1. Generate the unsigned data
-        uint256 nonce = vm.getNonce(chatterPayProxy);
+        // uint256 nonce = vm.getNonce(chatterPayProxy);
 
-        PackedUserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy, nonce);
+        PackedUserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy);
 
         // 2. Get the userOp Hash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
@@ -87,7 +88,7 @@ contract SendPackedUserOp is Script {
         return userOp;
     }
 
-    function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender, uint256 nonce)
+    function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender)
         internal
         pure
         returns (PackedUserOperation memory)
