@@ -10,7 +10,9 @@ error ChaterPayNFT__Unauthorized();
 
 contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
-    mapping (address => bool) private authorized;
+    mapping (address => bool) public authorized;
+
+    event Authorized(address indexed user, bool indexed value);
 
     modifier onlyOwnerOrAuthorized() {
         if(msg.sender != owner() && !authorized[msg.sender]) {
@@ -32,6 +34,11 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
+    }
+
+    function setAuthorized(address user, bool value) public onlyOwner {
+        authorized[user] = value;
+        emit Authorized(user, value);
     }
 
     // The following functions are overrides required by Solidity.
