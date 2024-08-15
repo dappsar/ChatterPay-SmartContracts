@@ -6,8 +6,18 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+error ChaterPayNFT__Unauthorized();
+
 contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     uint256 private _nextTokenId;
+    mapping (address => bool) private authorized;
+
+    modifier onlyOwnerOrAuthorized() {
+        if(msg.sender != owner() && !authorized[msg.sender]) {
+            revert ChaterPayNFT__Unauthorized();
+        }
+        _;
+    }
 
     constructor(address initialOwner)
         ERC721("ChatterPayNFT", "CHTP")
@@ -18,7 +28,7 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         return "https://"; // TBD
     }
 
-    function safeMint(address to, string memory uri) public onlyOwner {
+    function safeMint(address to, string memory uri) public onlyOwnerOrAuthorized {
         uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);

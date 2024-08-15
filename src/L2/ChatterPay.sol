@@ -153,8 +153,12 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         emit TokenTransfer(address(this), dest, fee, functionData);
     }
 
-    function executeTokenSwap() external requireFromEntryPointOrOwner {
-
+    function executeTokenSwap(
+        address dest,
+        uint256 fee,
+        bytes calldata functionData
+    ) external requireFromEntryPointOrOwner {
+        
     }
 
     // A signature is valid, if it's the ChatterPay owner
