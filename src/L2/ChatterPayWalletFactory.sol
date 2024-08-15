@@ -10,7 +10,6 @@ import {BeaconProxy} from "lib/openzeppelin-contracts/contracts/proxy/beacon/Bea
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 import {ChatterPayBeacon} from "./ChatterPayBeacon.sol";
 import {ChatterPay} from "./ChatterPay.sol";
-import {console} from "lib/forge-std/src/console.sol";
 
 /*//////////////////////////////////////////////////////////////
                                 ERRORS
@@ -58,7 +57,6 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _beacon, address _entryPoint, address _owner, address _paymaster) Ownable(_owner) {
-        console.log("ChatterPayWalletFactory deployed with owner: %s", _owner);
         beacon = _beacon;
         entryPoint = _entryPoint;
         paymaster = _paymaster;

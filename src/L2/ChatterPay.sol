@@ -157,9 +157,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         address dest,
         uint256 fee,
         bytes calldata functionData
-    ) external requireFromEntryPointOrOwner {
-        
-    }
+    ) external requireFromEntryPointOrOwner {}
 
     // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(

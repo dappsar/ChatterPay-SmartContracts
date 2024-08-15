@@ -27,7 +27,7 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     {}
 
     function _baseURI() internal pure override returns (string memory) {
-        return "https://"; // TBD
+        return "https://chatterpay-back-ylswtey2za-uc.a.run.app/nft/";
     }
 
     function safeMint(address to, string memory uri) public onlyOwnerOrAuthorized {

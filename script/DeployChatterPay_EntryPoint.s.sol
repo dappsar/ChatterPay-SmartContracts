@@ -144,19 +144,4 @@ contract DeployChatterPay_EntryPoint is Script {
             chatterPayNFT
         );
     }
-
-    // function deployChatterPayOnly() public returns(ChatterPay){
-    //   // Deploy HelperConfig
-    //   helperConfig = new HelperConfig();
-    //   HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
-    //   // Deploy Logic
-    //   chatterPay = new ChatterPay{
-    //       salt: keccak256(abi.encodePacked(config.account))
-    //   }();
-    //   console.log(
-    //       "ChatterPay deployed to address %s",
-    //       address(chatterPay)
-    //   );
-    //   return chatterPay;
-    // }
 }
