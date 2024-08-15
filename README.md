@@ -65,6 +65,7 @@ Create a .env file in the root folder and populate it with the following keys an
 ETH_SEPOLIA_RPC_URL=Your node provider URL for Sepolia
 SCROLL_SEPOLIA_RPC_URL=Your node provider URL for Scroll-Sepolia
 PRIVATE_KEY=Your private key
+SCROLLSCAN_API_KEY=Your Scrollscan API key
 ```
 
 __4. Install Dependencies__:
