@@ -71,25 +71,30 @@ contract DeployChatterPay_EntryPoint is Script {
             config.account
         );
 
-        // If chain is L2
         // Deploy Logic
-        chatterPay = new ChatterPay{
-            salt: keccak256(abi.encodePacked(config.account))
-        }();
+        // CREATE2 for production
+        // chatterPay = new ChatterPay{
+        //     salt: keccak256(abi.encodePacked(config.account))
+        // }();
+        chatterPay = new ChatterPay();
         console.log("ChatterPay deployed to address %s", address(chatterPay));
 
         // Deploy Beacon (with Logic address as parameter)
-        beacon = new ChatterPayBeacon{
-            salt: keccak256(abi.encodePacked(config.account))
-        }(address(chatterPay), config.account);
+        // CREATE2 for production
+        // beacon = new ChatterPayBeacon{
+        //     salt: keccak256(abi.encodePacked(config.account))
+        // }(address(chatterPay), config.account);
+        beacon = new ChatterPayBeacon(address(chatterPay), config.account);
         console.log("ChatterPayBeacon deployed to address %s", address(beacon));
 
         address paymaster = address(1); // TBD - Paymaster Address
 
         // Deploy Factory (with Beacon, EntryPoint, Account & Paymaster addresses as parameters)
-        factory = new ChatterPayWalletFactory{
-            salt: keccak256(abi.encodePacked(config.account))
-        }(address(beacon), config.entryPoint, config.account, paymaster);
+        // CREATE2 for production
+        // factory = new ChatterPayWalletFactory{
+        //     salt: keccak256(abi.encodePacked(config.account))
+        // }(address(beacon), config.entryPoint, config.account, paymaster);
+        factory = new ChatterPayWalletFactory(address(beacon), config.entryPoint, config.account, paymaster);
         console.log(
             "ChatterPayWalletFactory deployed to address %s",
             address(factory)

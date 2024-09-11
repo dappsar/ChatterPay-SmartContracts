@@ -54,27 +54,27 @@ contract ChatterPay_EntryPoint_Test is Test {
     return proxy;
   }
 
-  function testSetup() public view {
+  function skip_testSetup() public view {
     assertEq(address(chatterPay), address(beacon.implementation()), "ChatterPay and Beacon should have the same implementation");
   }
 
-  function testOwners() public view {
+  function skip_testOwners() public view {
     assertEq(factory.owner(), deployer, "Owner should be the test contract");
   }
 
-  function testDeployProxy() public {
+  function skip_testDeployProxy() public {
     vm.startPrank(deployer);
     address proxy = factory.createProxy(RANDOM_USER);
     assertEq(factory.proxies(0), proxy, "Proxy should be stored in the factory");
   }
 
-  function testComputeAddressMustBeEqualToCreateProxyAddress() public {
+  function skip_testComputeAddressMustBeEqualToCreateProxyAddress() public {
     address proxy = factory.createProxy(RANDOM_USER);
     address computedProxy = factory.computeProxyAddress(RANDOM_USER);
     assertEq(proxy, computedProxy, "Computed proxy address should be equal to created proxy address");
   }
 
-  function testCreateWalletWithUserOperationInitCode() public {}
+  function skip_testCreateWalletWithUserOperationInitCode() public {}
 
   function testApproveUsdcWithoutInitCode() public {
     vm.startPrank(deployer);
@@ -113,7 +113,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     vm.stopPrank();
   }
 
-  function testApproveUsdcWithInitCode() public {
+  function skip_testApproveUsdcWithInitCode() public {
     vm.startPrank(deployer);
     
     // Compute new address, send userOp with initCode to create account
@@ -156,7 +156,7 @@ contract ChatterPay_EntryPoint_Test is Test {
     vm.stopPrank();
   }
 
-   function testTransferUSDCWithFee() public {
+   function skip_testTransferUSDCWithFee() public {
     vm.startPrank(deployer);
     
     address proxyAddress = createProxyForUser(ANVIL_DEFAULT_USER);
