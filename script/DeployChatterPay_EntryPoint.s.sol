@@ -22,30 +22,13 @@ contract DeployChatterPay_EntryPoint is Script {
     ChatterPay chatterPay;
     ChatterPayBeacon beacon;
     ChatterPayWalletFactory factory;
-    L1Keystore l1Keystore;
-    L2Keystore l2Keystore;
+    // L1Keystore l1Keystore;
+    // L2Keystore l2Keystore;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
 
     function run() public {
         deployChatterPayOnL2();
-        deployL1Keystore();
-    }
-
-    function deployL1Keystore() public returns (L1Keystore) {
-        if (block.chainid == ethSepoliaChainId) {
-            // Deploy L1Keystore if chain is Eth Sepolia
-            address factoryAddress = DevOpsTools.get_most_recent_deployment(
-                "ChatterPayWalletFactory",
-                scrollDevnetChainId
-            );
-            l1Keystore = new L1Keystore(factoryAddress);
-            console.log(
-                "L1Keystore deployed to address %s",
-                address(l1Keystore)
-            );
-        }
-        return l1Keystore;
     }
 
     function deployChatterPayOnL2()
@@ -55,7 +38,6 @@ contract DeployChatterPay_EntryPoint is Script {
             ChatterPay,
             ChatterPayBeacon,
             ChatterPayWalletFactory,
-            L2Keystore,
             TokensPriceFeeds,
             ChatterPayNFT
         )
@@ -100,20 +82,9 @@ contract DeployChatterPay_EntryPoint is Script {
             address(factory)
         );
 
-        l2Keystore = new L2Keystore(address(l1Keystore), address(0));
-        console.log("L2Keystore deployed to address %s", address(l2Keystore));
-        if (address(l1Keystore) != address(0)) {
-            factory.setKeystore(address(l1Keystore), address(l2Keystore));
-            console.log("Keystore addresses set in factory");
-        } else {
-            console.log("Keystore addresses NOT set in factory");
-        }
-
         chatterPay.initialize(
             config.entryPoint,
             config.account,
-            address(l1Keystore),
-            address(l2Keystore),
             paymaster
         );
         console.log("ChatterPay initialized");
@@ -125,18 +96,6 @@ contract DeployChatterPay_EntryPoint is Script {
             address(chatterPayNFT)
         );
 
-        if (block.chainid == scrollSepoliaChainId) {
-            // For Scroll Sepolia
-            // Deploy API3 Price feed
-            address ETH_USD_FEED = 0xa47Fd122b11CdD7aad7c3e8B740FB91D83Ce43D1;
-            address BTC_USD_FEED = 0x81A64473D102b38eDcf35A7675654768D11d7e24;
-            tokensPriceFeeds = new TokensPriceFeeds(ETH_USD_FEED, BTC_USD_FEED);
-            console.log(
-                "TokensPriceFeeds deployed to address %s",
-                address(tokensPriceFeeds)
-            );
-        }
-
         vm.stopBroadcast();
 
         return (
@@ -144,7 +103,6 @@ contract DeployChatterPay_EntryPoint is Script {
             chatterPay,
             beacon,
             factory,
-            l2Keystore,
             tokensPriceFeeds,
             chatterPayNFT
         );

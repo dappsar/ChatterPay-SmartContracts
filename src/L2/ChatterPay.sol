@@ -49,14 +49,11 @@ interface IL1Blocks {
 //////////////////////////////////////////////////////////////*/
 
 contract ChatterPay is IAccount, OwnableUpgradeable {
-
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
     IEntryPoint private i_entryPoint;
-    IL2Keystore private i_l2Keystore;
-    address private l1StorageAddr;
     uint256 public constant FEE_IN_CENTS = 50; // 50 cents
     address public paymaster;
     address public api3PriceFeed;
@@ -67,8 +64,18 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    event Execution(address indexed wallet, address indexed dest, uint256 indexed value, bytes functionData);
-    event TokenTransfer(address indexed wallet, address indexed dest, uint256 indexed fee, bytes functionData);
+    event Execution(
+        address indexed wallet,
+        address indexed dest,
+        uint256 indexed value,
+        bytes functionData
+    );
+    event TokenTransfer(
+        address indexed wallet,
+        address indexed dest,
+        uint256 indexed fee,
+        bytes functionData
+    );
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -95,15 +102,11 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     function initialize(
         address _entryPoint,
         address _newOwner,
-        address _l1Storage,
-        address _l2Storage,
         address _paymaster
     ) public initializer {
         i_entryPoint = IEntryPoint(_entryPoint);
         __Ownable_init(_newOwner);
-        l1StorageAddr = _l1Storage;
         paymaster = _paymaster;
-        i_l2Keystore = IL2Keystore(_l2Storage);
         s_supportedStableTokens = ["USDC", "USDT", "DAI"];
         s_supportedNotStableTokens = ["WETH", "WBTC"];
     }
@@ -136,7 +139,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     ) external requireFromEntryPointOrOwner {
         if (fee != calculateFee(dest, FEE_IN_CENTS))
             revert ChatterPay__ExecuteCallFailed("Incorrect fee");
-        
+
         (bool feeTxSuccess, bytes memory feeTxResult) = dest.call(
             abi.encodeWithSignature("transfer(address,uint256)", paymaster, fee)
         );
@@ -152,12 +155,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         }
         emit TokenTransfer(address(this), dest, fee, functionData);
     }
-
-    function executeTokenSwap(
-        address dest,
-        uint256 fee,
-        bytes calldata functionData
-    ) external requireFromEntryPointOrOwner {}
 
     // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(
@@ -186,22 +183,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
-
-        if (block.chainid == 2227728) {
-            // If in Scroll Devnet
-            // Validate signature by using L1SLOAD & Keystore in L2/L2
-            address userWalletOwner = i_l2Keystore.l1SloadGetWalletOwner(
-                address(this)
-            );
-            if (signer != userWalletOwner) {
-                return SIG_VALIDATION_FAILED;
-            }
-        } else {
-            // Validate signature by using the owner of the contract
-            if (signer != owner()) {
-                return SIG_VALIDATION_FAILED;
-            }
-        }
+        if (signer != owner()) return SIG_VALIDATION_FAILED;
         return SIG_VALIDATION_SUCCESS;
     }
 
@@ -224,7 +206,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         uint256 decimals = getTokenDecimals(_token);
         uint256 oraclePrice;
         uint256 fee;
-        if(!isStable) {
+        if (!isStable) {
             oraclePrice = getAPI3OraclePrice(symbol);
             fee = calculateFeeNotStable(oraclePrice, _cents);
         } else {
@@ -235,27 +217,37 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
 
     function isStableToken(string memory _symbol) internal view returns (bool) {
         string[5] memory m_supportedStableTokens = s_supportedStableTokens;
-        string[2] memory m_supportedNotStableTokens = s_supportedNotStableTokens;
-        for(uint256 i; i < m_supportedStableTokens.length; i++) {
+        string[2]
+            memory m_supportedNotStableTokens = s_supportedNotStableTokens;
+        for (uint256 i; i < m_supportedStableTokens.length; i++) {
             console.log("Checking %s", m_supportedStableTokens[i]);
-            if(keccak256(abi.encodePacked(_symbol)) == keccak256(abi.encodePacked(m_supportedStableTokens[i]))) {
+            if (
+                keccak256(abi.encodePacked(_symbol)) ==
+                keccak256(abi.encodePacked(m_supportedStableTokens[i]))
+            ) {
                 return true;
             }
         }
-        for(uint256 i; i < m_supportedNotStableTokens.length; i++) {
+        for (uint256 i; i < m_supportedNotStableTokens.length; i++) {
             console.log("Checking %s", m_supportedNotStableTokens[i]);
-            if(keccak256(abi.encodePacked(_symbol)) == keccak256(abi.encodePacked(m_supportedNotStableTokens[i]))) {
+            if (
+                keccak256(abi.encodePacked(_symbol)) ==
+                keccak256(abi.encodePacked(m_supportedNotStableTokens[i]))
+            ) {
                 return false;
             }
         }
         revert ChatterPay__UnsopportedToken();
     }
 
-    function calculateFeeStable(uint256 _decimals, uint256 _cents) internal pure returns(uint256) {
+    function calculateFeeStable(
+        uint256 _decimals,
+        uint256 _cents
+    ) internal pure returns (uint256) {
         uint256 fee;
-        if(_decimals == 6) {
+        if (_decimals == 6) {
             fee = _cents * 1e4;
-        } else if(_decimals == 18) {
+        } else if (_decimals == 18) {
             fee = _cents * 1e16;
         } else {
             revert ChatterPay__UnsopportedTokenDecimals();
