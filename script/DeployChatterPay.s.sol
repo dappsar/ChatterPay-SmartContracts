@@ -7,13 +7,11 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
-import {L1Keystore} from "../src/Ethereum/L1Keystore.sol";
-import {L2Keystore} from "../src/L2/L2Keystore.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
 import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
-contract DeployChatterPay_EntryPoint is Script {
+contract DeployChatterPay is Script {
     uint256 ethSepoliaChainId = 11155111;
     uint256 scrollSepoliaChainId = 534351;
     uint256 scrollDevnetChainId = 2227728;
@@ -22,8 +20,6 @@ contract DeployChatterPay_EntryPoint is Script {
     ChatterPay chatterPay;
     ChatterPayBeacon beacon;
     ChatterPayWalletFactory factory;
-    // L1Keystore l1Keystore;
-    // L2Keystore l2Keystore;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
 

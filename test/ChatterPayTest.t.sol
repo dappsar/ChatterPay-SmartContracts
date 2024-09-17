@@ -3,19 +3,17 @@
 pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
-import {DeployChatterPay_EntryPoint} from "../script/DeployChatterPay_EntryPoint.s.sol";
+import {DeployChatterPay} from "../script/DeployChatterPay.s.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
-import {L1Keystore} from "../src/Ethereum/L1Keystore.sol";
-import {L2Keystore} from "../src/L2/L2Keystore.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
 import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, PackedUserOperation, IEntryPoint} from "script/SendPackedUserOp.s.sol";
 
-contract ChatterPay_EntryPoint_Test is Test {
+contract ChatterPayTest is Test {
     HelperConfig helperConfig;
     ChatterPay chatterPay;
     ChatterPayBeacon beacon;
@@ -32,7 +30,7 @@ contract ChatterPay_EntryPoint_Test is Test {
         0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
 
     function setUp() public {
-        DeployChatterPay_EntryPoint deployChatterPay = new DeployChatterPay_EntryPoint();
+        DeployChatterPay deployChatterPay = new DeployChatterPay();
         (
             helperConfig,
             chatterPay,
