@@ -86,7 +86,10 @@ contract DeployChatterPay is Script {
         console.log("ChatterPay initialized");
 
         // Deploy ChatterPayNFT
-        chatterPayNFT = new ChatterPayNFT(config.account);
+        // main: "https://chatterpay-back-671609149217.us-central1.run.app/"
+        // dev: "https://chatterpay-back-staging-671609149217.us-central1.run.app/"
+        const baseURI = "";
+        chatterPayNFT = new ChatterPayNFT(config.account, baseURI);
         console.log(
             "ChatterPayNFT deployed to address %s",
             address(chatterPayNFT)
