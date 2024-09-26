@@ -27,13 +27,14 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         _;
     }
 
-    constructor(address initialOwner, address _baseURI)
+    constructor(address initialOwner, string memory baseURI)
         ERC721("ChatterPayNFT", "CHTP")
         Ownable(initialOwner)
-        s_baseURI = _baseURI;
-    {}
+    {
+        s_baseURI = baseURI;
+    }
 
-    function _baseURI() internal pure override returns (string memory) {
+    function _baseURI() internal view override returns (string memory) {
         return s_baseURI;
     }
 

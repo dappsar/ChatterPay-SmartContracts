@@ -48,6 +48,7 @@ contract SendPackedUserOp is Script {
         bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, RANDOM_APPROVER, 1e18);
         // this is the function on the wallet called by the entrypoint
         bytes memory executeCalldata = abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+
         
         PackedUserOperation memory userOp =
             generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress, ANVIL_DEFAUL_USER_KEY);
