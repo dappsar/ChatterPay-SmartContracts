@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 error ChatterPayNFT__Unauthorized();
 error ChatterPayNFT__TokenAlreadyMinted(uint256);
 error ChatterPayNFT__OriginalTokenNotMinted(uint256);
+error ChatterPayNFT__LimitExceedsCopies();
 
 contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     
@@ -16,6 +17,7 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     mapping (address => bool) public s_authorized;
     mapping (uint256 tokenId => address minter) public s_originalMinter;
     mapping(uint256 tokenId => uint256 copies) public s_copyCount;
+    mapping(uint256 tokenId => uint256 copyLimit) public s_copyLimit;
     string private s_baseURI;
 
     event Authorized(address indexed user, bool indexed value);
@@ -38,17 +40,21 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         return s_baseURI;
     }
 
-    function mintOriginal(address to, string memory uri) public onlyOwnerOrAuthorized { // tbd: define uri
-        uint256 tokenId = s_tokenId++; // index 1
+    function mintOriginal(address to, string memory uri) public onlyOwnerOrAuthorized {
+        s_tokenId++; // index 1
+        if(s_tokenId % 10 == 0) s_tokenId++; // never ending in 0
+        uint256 tokenId = s_tokenId;
         if(s_originalMinter[tokenId] != address(0)) revert ChatterPayNFT__TokenAlreadyMinted(tokenId);
+        s_originalMinter[tokenId] = to;
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
     }
 
     function mintCopy(address to, uint256 originalTokenId) public onlyOwnerOrAuthorized {
         if(s_originalMinter[originalTokenId] == address(0)) revert ChatterPayNFT__OriginalTokenNotMinted(originalTokenId);
+        if(s_copyCount[originalTokenId] >= s_copyLimit[originalTokenId]) revert ChatterPayNFT__LimitExceedsCopies();
         s_copyCount[originalTokenId]++;
-        uint256 copyTokenId = originalTokenId * 10**4 + s_copyCount[originalTokenId];
+        uint256 copyTokenId = originalTokenId * 10**8 + s_copyCount[originalTokenId];
         string memory uri = tokenURI(originalTokenId);
         _safeMint(to, copyTokenId);
         _setTokenURI(copyTokenId, uri);
@@ -61,6 +67,12 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
 
     function setBaseURI(string memory _newBaseURI) public onlyOwner {
         s_baseURI = _newBaseURI;
+    }
+
+    function setCopiesLimit(uint256 tokenId, uint256 limit) public {
+        if(msg.sender != s_originalMinter[tokenId]) revert ChatterPayNFT__Unauthorized();
+        if(limit < s_copyCount[tokenId]) revert ChatterPayNFT__LimitExceedsCopies();
+        s_copyLimit[tokenId] = limit;
     }
 
     // The following functions are overrides required by Solidity.
