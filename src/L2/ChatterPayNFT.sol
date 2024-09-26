@@ -42,8 +42,9 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
 
     function mintOriginal(address to, string memory uri) public onlyOwnerOrAuthorized {
         s_tokenId++; // index 1
-        if(s_tokenId % 10 == 0) s_tokenId++; // never ending in 0
+        if(s_tokenId % 10 == 0) s_tokenId++; // never ending in 0 to avoid conflicts with copies
         uint256 tokenId = s_tokenId;
+        s_copyLimit[tokenId] = 1000; // default limit
         if(s_originalMinter[tokenId] != address(0)) revert ChatterPayNFT__TokenAlreadyMinted(tokenId);
         s_originalMinter[tokenId] = to;
         _safeMint(to, tokenId);
@@ -69,10 +70,10 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         s_baseURI = _newBaseURI;
     }
 
-    function setCopiesLimit(uint256 tokenId, uint256 limit) public {
+    function setCopiesLimit(uint256 tokenId, uint256 newLimit) public {
         if(msg.sender != s_originalMinter[tokenId]) revert ChatterPayNFT__Unauthorized();
-        if(limit < s_copyCount[tokenId]) revert ChatterPayNFT__LimitExceedsCopies();
-        s_copyLimit[tokenId] = limit;
+        if(newLimit < s_copyCount[tokenId]) revert ChatterPayNFT__LimitExceedsCopies();
+        s_copyLimit[tokenId] = newLimit;
     }
 
     // The following functions are overrides required by Solidity.
