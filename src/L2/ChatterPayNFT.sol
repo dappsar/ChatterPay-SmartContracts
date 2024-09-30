@@ -6,78 +6,91 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-error ChatterPayNFT__Unauthorized();
-error ChatterPayNFT__TokenAlreadyMinted(uint256);
-error ChatterPayNFT__OriginalTokenNotMinted(uint256);
-error ChatterPayNFT__LimitExceedsCopies();
+error ChaterPayNFT__Unauthorized();
 
 contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
-    
-    uint256 private s_tokenId;
-    mapping (address => bool) public s_authorized;
-    mapping (uint256 tokenId => address minter) public s_originalMinter;
-    mapping(uint256 tokenId => uint256 copies) public s_copyCount;
-    mapping(uint256 tokenId => uint256 copyLimit) public s_copyLimit;
-    string private s_baseURI;
+    uint256 private _nextTokenId;
+    mapping(address => bool) public authorized;
+    struct Metadata {
+        string name;
+        string description;
+        string image;
+    }
+
+    mapping(uint256 => Metadata) private _tokenMetadata;
 
     event Authorized(address indexed user, bool indexed value);
+    event Minted(address indexed to, uint256 indexed tokenId);
 
     modifier onlyOwnerOrAuthorized() {
-        if(msg.sender != owner() && !s_authorized[msg.sender]) {
-            revert ChatterPayNFT__Unauthorized();
+        if (msg.sender != owner() && !authorized[msg.sender]) {
+            revert ChaterPayNFT__Unauthorized();
         }
         _;
     }
 
-    constructor(address initialOwner, string memory baseURI)
-        ERC721("ChatterPayNFT", "CHTP")
-        Ownable(initialOwner)
-    {
-        s_baseURI = baseURI;
+    constructor(
+        address initialOwner
+    ) ERC721("ChatterPayNFT", "CHTP") Ownable(initialOwner) {}
+
+    function _baseURI() internal pure override returns (string memory) {
+        return "https://chatterpay-back-ylswtey2za-uc.a.run.app/nft/";
     }
 
-    function _baseURI() internal view override returns (string memory) {
-        return s_baseURI;
-    }
-
-    function mintOriginal(address to, string memory uri) public onlyOwnerOrAuthorized {
-        s_tokenId++; // index 1
-        if(s_tokenId % 10 == 0) s_tokenId++; // never ending in 0 to avoid conflicts with copies
-        uint256 tokenId = s_tokenId;
-        s_copyLimit[tokenId] = 1000; // default limit
-        if(s_originalMinter[tokenId] != address(0)) revert ChatterPayNFT__TokenAlreadyMinted(tokenId);
-        s_originalMinter[tokenId] = to;
+    function safeMint(
+        address to,
+        string memory image
+    ) public onlyOwnerOrAuthorized {
+        uint256 tokenId = _nextTokenId++;
         _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
+        _tokenMetadata[tokenId] = Metadata("chatterpay", "nft", image);
+        // _setTokenURI(tokenId, uri);
+        emit Minted(to, tokenId);
     }
 
-    function mintCopy(address to, uint256 originalTokenId) public onlyOwnerOrAuthorized {
-        if(s_originalMinter[originalTokenId] == address(0)) revert ChatterPayNFT__OriginalTokenNotMinted(originalTokenId);
-        if(s_copyCount[originalTokenId] >= s_copyLimit[originalTokenId]) revert ChatterPayNFT__LimitExceedsCopies();
-        s_copyCount[originalTokenId]++;
-        uint256 copyTokenId = originalTokenId * 10**8 + s_copyCount[originalTokenId];
-        string memory uri = tokenURI(originalTokenId);
-        _safeMint(to, copyTokenId);
-        _setTokenURI(copyTokenId, uri);
+    // Sobrescribir tokenURI para devolver metadatos en formato JSON directamente
+    function tokenURI(
+        uint256 tokenId
+    ) public view override(ERC721, ERC721URIStorage) returns (string memory) {
+        require(
+            _exists(tokenId),
+            "ERC721Metadata: URI query for nonexistent token"
+        );
+
+        Metadata memory metadata = _tokenMetadata[tokenId];
+        return
+            string(
+                abi.encodePacked(
+                    "data:application/json;utf8,",
+                    '{"name":"',
+                    metadata.name,
+                    '", "description":"',
+                    metadata.description,
+                    '", "image":"',
+                    metadata.image,
+                    '"}'
+                )
+            );
     }
 
     function setAuthorized(address user, bool value) public onlyOwner {
-        s_authorized[user] = value;
+        authorized[user] = value;
         emit Authorized(user, value);
-    }
-
-    function setBaseURI(string memory _newBaseURI) public onlyOwner {
-        s_baseURI = _newBaseURI;
-    }
-
-    function setCopiesLimit(uint256 tokenId, uint256 newLimit) public {
-        if(msg.sender != s_originalMinter[tokenId]) revert ChatterPayNFT__Unauthorized();
-        if(newLimit < s_copyCount[tokenId]) revert ChatterPayNFT__LimitExceedsCopies();
-        s_copyLimit[tokenId] = newLimit;
     }
 
     // The following functions are overrides required by Solidity.
 
+    // Función _exists para verificar si el tokenId ha sido minteado
+    function _exists(uint256 tokenId) internal view returns (bool) {
+        // Verificar si el token tiene un propietario
+        try this.ownerOf(tokenId) returns (address owner) {
+            return owner != address(0);
+        } catch {
+            return false;
+        }
+    }
+
+    /*
     function tokenURI(uint256 tokenId)
         public
         view
@@ -86,13 +99,11 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     {
         return super.tokenURI(tokenId);
     }
+    */
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC721, ERC721URIStorage) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
