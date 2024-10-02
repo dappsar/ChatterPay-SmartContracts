@@ -12,9 +12,11 @@ import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract DeployChatterPay is Script {
+    
     uint256 ethSepoliaChainId = 11155111;
     uint256 scrollSepoliaChainId = 534351;
     uint256 scrollDevnetChainId = 2227728;
+    uint256 arbitrumSepoliaChainId = 421614;
 
     HelperConfig helperConfig;
     ChatterPay chatterPay;
@@ -22,6 +24,8 @@ contract DeployChatterPay is Script {
     ChatterPayWalletFactory factory;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
+
+    address backendEOA = vm.envAddress("BACKEND_EOA");
 
     function run() public {
         deployChatterPayOnL2();
@@ -94,6 +98,8 @@ contract DeployChatterPay is Script {
             "ChatterPayNFT deployed to address %s",
             address(chatterPayNFT)
         );
+        chatterPayNFT.setAuthorized(backendEOA, true);
+        console.log("ChatterPayNFT: backend EOA authorized");
 
         vm.stopBroadcast();
 

@@ -7,13 +7,12 @@ pragma solidity ^0.8.24;
 //////////////////////////////////////////////////////////////*/
 
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import {IAccount} from "lib/account-abstraction/contracts/interfaces/IAccount.sol";
-import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {IAccount, UserOperation} from "lib/entry-point-v6/interfaces/IAccount.sol";
 import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
-import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {IEntryPoint} from "lib/entry-point-v6/interfaces/IEntryPoint.sol";
 import {ITokensPriceFeeds} from "../Ethereum/TokensPriceFeeds.sol";
 import {console} from "forge-std/console.sol";
 
@@ -75,6 +74,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         uint256 indexed fee,
         bytes functionData
     );
+    event EntryPointSet(address indexed entryPoint);
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -157,7 +157,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
 
     // A signature is valid, if it's the ChatterPay owner
     function validateUserOp(
-        PackedUserOperation calldata userOp,
+        UserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external requireFromEntryPoint returns (uint256 validationData) {
@@ -175,7 +175,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     //////////////////////////////////////////////////////////////*/
 
     function _validateSignature(
-        PackedUserOperation calldata userOp,
+        UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal view returns (uint256 validationData) {
         bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(
@@ -269,6 +269,11 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
 
     function getEntryPoint() external view returns (address) {
         return address(i_entryPoint);
+    }
+
+    function setEntryPoint(address _entryPoint) external onlyOwner {
+        i_entryPoint = IEntryPoint(_entryPoint);
+        emit EntryPointSet(_entryPoint);
     }
 
     function getAPI3OraclePrice(

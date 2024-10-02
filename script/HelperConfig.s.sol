@@ -2,7 +2,7 @@
 pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {EntryPoint} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
+import {EntryPoint} from "lib/entry-point-v6/core/EntryPoint.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 
 contract HelperConfig is Script {
@@ -79,7 +79,7 @@ contract HelperConfig is Script {
     {
         return
             NetworkConfig({
-                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, // v0.7
                 usdc: 0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238,
                 usdt: 0x7169D38820dfd117C3FA1f22a697dBA58d90BA06,
                 weth: 0x0000000000000000000000000000000000000000, // address TBD
@@ -95,7 +95,7 @@ contract HelperConfig is Script {
     {
         return
             NetworkConfig({
-                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, // v0.7
                 usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
                 usdt: 0x961bf3bf61d3446907E0Db83C9c5D958c17A94f6, // address TBD
                 weth: 0x0000000000000000000000000000000000000000, // address TBD
@@ -111,7 +111,7 @@ contract HelperConfig is Script {
     {
         return
             NetworkConfig({
-                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, // v0.7
                 usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
                 usdt: 0x0000000000000000000000000000000000000000, // address TBD
                 weth: 0x0000000000000000000000000000000000000000, // address TBD
@@ -127,7 +127,7 @@ contract HelperConfig is Script {
     {
         return
             NetworkConfig({
-                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, // v0.7
                 usdc: 0x0000000000000000000000000000000000000000, // address to be deployed
                 usdt: 0x0000000000000000000000000000000000000000, // address TBD
                 weth: 0x0000000000000000000000000000000000000000, // address TBD
@@ -143,7 +143,7 @@ contract HelperConfig is Script {
     {
         return
             NetworkConfig({
-                entryPoint: 0x0000000071727De22E5E9d8BAf0edAc6f37da032, // v0.7
+                entryPoint: 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789, // v0.7
                 usdc: 0x5fd84259d66Cd46123540766Be93DFE6D43130D7,
                 usdt: 0x0000000000000000000000000000000000000000, // address TBD
                 weth: 0x0000000000000000000000000000000000000000, // address TBD
