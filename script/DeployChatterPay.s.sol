@@ -7,6 +7,7 @@ import {HelperConfig} from "./HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
+import {ChatterPayPaymaster} from "../src/L2/ChatterPayPaymaster.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
 import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
@@ -22,6 +23,7 @@ contract DeployChatterPay is Script {
     ChatterPay chatterPay;
     ChatterPayBeacon beacon;
     ChatterPayWalletFactory factory;
+    ChatterPayPaymaster paymaster;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
 
@@ -67,25 +69,31 @@ contract DeployChatterPay is Script {
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(address(chatterPay), config.account);
         beacon = new ChatterPayBeacon(address(chatterPay), config.account);
-        console.log("ChatterPayBeacon deployed to address %s", address(beacon));
+        console.log("Beacon deployed to address %s", address(beacon));
 
-        address paymaster = address(1); // TBD - Paymaster Address
+        // Deploy Paymaster
+        // CREATE2 for production
+        // paymaster = new ChatterPayPaymaster{
+        //     salt: keccak256(abi.encodePacked(config.account))
+        // }(config.account);
+        paymaster = new ChatterPayPaymaster();
+        console.log("Paymaster deployed to address %s", address(paymaster));
 
         // Deploy Factory (with Beacon, EntryPoint, Account & Paymaster addresses as parameters)
         // CREATE2 for production
         // factory = new ChatterPayWalletFactory{
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(address(beacon), config.entryPoint, config.account, paymaster);
-        factory = new ChatterPayWalletFactory(address(beacon), config.entryPoint, config.account, paymaster);
+        factory = new ChatterPayWalletFactory(address(beacon), config.entryPoint, config.account, address(paymaster));
         console.log(
-            "ChatterPayWalletFactory deployed to address %s",
+            "WalletFactory deployed to address %s",
             address(factory)
         );
 
         chatterPay.initialize(
             config.entryPoint,
             config.account,
-            paymaster
+            address(paymaster)
         );
         console.log("ChatterPay initialized");
 
