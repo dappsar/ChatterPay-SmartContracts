@@ -2,9 +2,9 @@
 pragma solidity 0.8.24;
 
 import {Script, console} from "forge-std/Script.sol";
-import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
+import {UserOperation} from "lib/entry-point-v6/interfaces/UserOperation.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
-import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
+import {IEntryPoint} from "lib/entry-point-v6/interfaces/IEntryPoint.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {ChatterPayWalletFactory} from "src/L2/ChatterPayWalletFactory.sol";
@@ -50,9 +50,9 @@ contract SendPackedUserOp is Script {
         bytes memory executeCalldata = abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
 
         
-        PackedUserOperation memory userOp =
+        UserOperation memory userOp =
             generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress, ANVIL_DEFAUL_USER_KEY);
-        PackedUserOperation[] memory ops = new PackedUserOperation[](1);
+        UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
         // Send transaction
@@ -67,11 +67,10 @@ contract SendPackedUserOp is Script {
         HelperConfig.NetworkConfig memory config,
         address chatterPayProxy,
         uint256 key
-    ) public view returns (PackedUserOperation memory) {
+    ) public view returns (UserOperation memory) {
         // 1. Generate the unsigned data
         // uint256 nonce = vm.getNonce(chatterPayProxy);
-
-        PackedUserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy);
+        UserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy);
 
         // 2. Get the userOp Hash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
@@ -93,20 +92,22 @@ contract SendPackedUserOp is Script {
     function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender)
         internal
         pure
-        returns (PackedUserOperation memory)
+        returns (UserOperation memory)
     {
         uint128 verificationGasLimit = 16777216;
         uint128 callGasLimit = verificationGasLimit;
         uint128 maxPriorityFeePerGas = 256;
         uint128 maxFeePerGas = maxPriorityFeePerGas;
-        return PackedUserOperation({
+        return UserOperation({
             sender: sender,
             nonce: 0,
             initCode: initCode,
             callData: callData,
-            accountGasLimits: bytes32(uint256(verificationGasLimit) << 128 | callGasLimit),
+            callGasLimit: callGasLimit,
+            verificationGasLimit: verificationGasLimit,
             preVerificationGas: verificationGasLimit,
-            gasFees: bytes32(uint256(maxPriorityFeePerGas) << 128 | maxFeePerGas),
+            maxFeePerGas: maxFeePerGas,
+            maxPriorityFeePerGas: maxPriorityFeePerGas,
             paymasterAndData: hex"",
             signature: hex""
         });
