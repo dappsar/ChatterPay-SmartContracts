@@ -51,12 +51,13 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
-    IEntryPoint private i_entryPoint;
-    uint256 public constant FEE_IN_CENTS = 50; // 50 cents
-    address public paymaster;
-    address public api3PriceFeed;
-    string[5] public s_supportedStableTokens;
+    IEntryPoint private s_entryPoint;
+    address public s_paymaster;
+    address public s_api3PriceFeed;
+    string[1] public s_supportedStableTokens;
     string[2] public s_supportedNotStableTokens;
+
+    uint256 public constant FEE_IN_CENTS = 50; // 50 cents
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -81,14 +82,14 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     //////////////////////////////////////////////////////////////*/
 
     modifier requireFromEntryPoint() {
-        if (msg.sender != address(i_entryPoint)) {
+        if (msg.sender != address(s_entryPoint)) {
             revert ChatterPay__NotFromEntryPoint();
         }
         _;
     }
 
     modifier requireFromEntryPointOrOwner() {
-        if (msg.sender != address(i_entryPoint) && msg.sender != owner()) {
+        if (msg.sender != address(s_entryPoint) && msg.sender != owner()) {
             revert ChatterPay__NotFromEntryPointOrOwner();
         }
         _;
@@ -103,10 +104,10 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         address _newOwner,
         address _paymaster
     ) public initializer {
-        i_entryPoint = IEntryPoint(_entryPoint);
+        s_entryPoint = IEntryPoint(_entryPoint);
         __Ownable_init(_newOwner);
-        paymaster = _paymaster;
-        s_supportedStableTokens = ["USDC", "USDT", "DAI"];
+        s_paymaster = _paymaster;
+        s_supportedStableTokens = ["USDT"];
         s_supportedNotStableTokens = ["WETH", "WBTC"];
     }
 
@@ -140,7 +141,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             revert ChatterPay__ExecuteCallFailed("Incorrect fee");
 
         (bool feeTxSuccess, bytes memory feeTxResult) = dest.call(
-            abi.encodeWithSignature("transfer(address,uint256)", paymaster, fee)
+            abi.encodeWithSignature("transfer(address,uint256)", s_paymaster, fee)
         );
         if (!feeTxSuccess) {
             revert ChatterPay__ExecuteCallFailed(feeTxResult);
@@ -166,8 +167,13 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         _payPrefund(missingAccountFunds);
     }
 
+    function setEntryPoint(address _entryPoint) external onlyOwner {
+        s_entryPoint = IEntryPoint(_entryPoint);
+        emit EntryPointSet(_entryPoint);
+    }
+
     function setPriceFeedAddress(address _priceFeed) public onlyOwner {
-        api3PriceFeed = _priceFeed;
+        s_api3PriceFeed = _priceFeed;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -215,7 +221,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     }
 
     function isStableToken(string memory _symbol) internal view returns (bool) {
-        string[5] memory m_supportedStableTokens = s_supportedStableTokens;
+        string[1] memory m_supportedStableTokens = s_supportedStableTokens;
         string[2]
             memory m_supportedNotStableTokens = s_supportedNotStableTokens;
         for (uint256 i; i < m_supportedStableTokens.length; i++) {
@@ -268,18 +274,13 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
     //////////////////////////////////////////////////////////////*/
 
     function getEntryPoint() external view returns (address) {
-        return address(i_entryPoint);
-    }
-
-    function setEntryPoint(address _entryPoint) external onlyOwner {
-        i_entryPoint = IEntryPoint(_entryPoint);
-        emit EntryPointSet(_entryPoint);
+        return address(s_entryPoint);
     }
 
     function getAPI3OraclePrice(
         string memory _token
     ) internal view returns (uint256) {
-        if (api3PriceFeed == address(0)) revert ChatterPay__API3Failed();
+        if (s_api3PriceFeed == address(0)) revert ChatterPay__API3Failed();
         // Call API3 Oracle
         uint256 price;
         uint256 ts;
@@ -288,16 +289,16 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             keccak256(abi.encodePacked(_token)) ==
             keccak256(abi.encodePacked("ETH"))
         ) {
-            token = ITokensPriceFeeds(api3PriceFeed).ETH_USD_Proxy();
+            token = ITokensPriceFeeds(s_api3PriceFeed).ETH_USD_Proxy();
         } else if (
             keccak256(abi.encodePacked(_token)) ==
             keccak256(abi.encodePacked("BTC"))
         ) {
-            token = ITokensPriceFeeds(api3PriceFeed).BTC_USD_Proxy();
+            token = ITokensPriceFeeds(s_api3PriceFeed).BTC_USD_Proxy();
         } else {
             revert ChatterPay__API3Failed();
         }
-        (price, ts) = ITokensPriceFeeds(api3PriceFeed).readDataFeed(token);
+        (price, ts) = ITokensPriceFeeds(s_api3PriceFeed).readDataFeed(token);
         return price;
     }
 
