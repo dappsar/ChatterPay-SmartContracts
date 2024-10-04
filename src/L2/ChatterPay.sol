@@ -27,6 +27,10 @@ error ChatterPay__L1SLoadFailed();
 error ChatterPay__UnsopportedTokenDecimals();
 error ChatterPay__API3Failed();
 error ChatterPay__UnsopportedToken();
+error ChatterPay__InvalidAmountOfTokens();
+error ChatterPay__InvalidTokenReceiver();
+error ChatterPay__NoTokenBalance(address);
+error ChatterPay__BalanceTxFailed();
 
 /*//////////////////////////////////////////////////////////////
                                INTERFACES
@@ -36,10 +40,10 @@ interface IERC20 {
     function symbol() external view returns (string memory);
 
     function decimals() external view returns (uint8);
-}
 
-interface IL1Blocks {
-    function latestBlockNumber() external view returns (uint256);
+    function balanceOf(address account) external view returns (uint256);
+
+    function transfer(address to, uint256 value) external returns (bool);
 }
 
 /*//////////////////////////////////////////////////////////////
@@ -76,6 +80,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         bytes functionData
     );
     event EntryPointSet(address indexed entryPoint);
+    event WithdrawBalance(address[] indexed, address indexed to);
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -141,7 +146,11 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             revert ChatterPay__ExecuteCallFailed("Incorrect fee");
 
         (bool feeTxSuccess, bytes memory feeTxResult) = dest.call(
-            abi.encodeWithSignature("transfer(address,uint256)", s_paymaster, fee)
+            abi.encodeWithSignature(
+                "transfer(address,uint256)",
+                s_paymaster,
+                fee
+            )
         );
         if (!feeTxSuccess) {
             revert ChatterPay__ExecuteCallFailed(feeTxResult);
@@ -165,6 +174,39 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         validationData = _validateSignature(userOp, userOpHash);
         // _validateNonce()
         _payPrefund(missingAccountFunds);
+    }
+
+    function withdrawfunds(
+        address[] memory tokenAddresses,
+        address to
+    ) external onlyOwner returns (bool) {
+        if (
+            tokenAddresses.length >
+            s_supportedNotStableTokens.length + s_supportedStableTokens.length
+        ) {
+            revert ChatterPay__InvalidAmountOfTokens();
+        }
+        if (to == address(0) || to.code.length > 0)
+            revert ChatterPay__InvalidTokenReceiver();
+
+        for (uint256 i; i < tokenAddresses.length; i++) {
+            if (tokenAddresses[i] == address(0)) {
+                (bool success, ) = payable(to).call{
+                    value: address(this).balance
+                }("");
+                if (!success) revert ChatterPay__BalanceTxFailed();
+            } else {
+                IERC20 token = IERC20(tokenAddresses[i]);
+                uint256 balance = token.balanceOf(address(this));
+                if (balance == 0)
+                    revert ChatterPay__NoTokenBalance(tokenAddresses[i]);
+                bool success = token.transfer(to, balance);
+                if (!success) revert ChatterPay__BalanceTxFailed();
+            }
+        }
+
+        emit WithdrawBalance(tokenAddresses, to);
+        return true;
     }
 
     function setEntryPoint(address _entryPoint) external onlyOwner {
@@ -225,7 +267,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         string[2]
             memory m_supportedNotStableTokens = s_supportedNotStableTokens;
         for (uint256 i; i < m_supportedStableTokens.length; i++) {
-            console.log("Checking %s", m_supportedStableTokens[i]);
             if (
                 keccak256(abi.encodePacked(_symbol)) ==
                 keccak256(abi.encodePacked(m_supportedStableTokens[i]))
@@ -234,7 +275,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             }
         }
         for (uint256 i; i < m_supportedNotStableTokens.length; i++) {
-            console.log("Checking %s", m_supportedNotStableTokens[i]);
             if (
                 keccak256(abi.encodePacked(_symbol)) ==
                 keccak256(abi.encodePacked(m_supportedNotStableTokens[i]))
