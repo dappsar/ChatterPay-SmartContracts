@@ -176,7 +176,7 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         _payPrefund(missingAccountFunds);
     }
 
-    function withdrawfunds(
+    function withdrawBalance(
         address[] memory tokenAddresses,
         address to
     ) external onlyOwner returns (bool) {
