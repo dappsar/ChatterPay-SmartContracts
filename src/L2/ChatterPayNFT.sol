@@ -70,7 +70,7 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         s_baseURI = _newBaseURI;
     }
 
-    function setCopiesLimit(uint256 tokenId, uint256 newLimit) public {
+    function setCopyLimit(uint256 tokenId, uint256 newLimit) public {
         if(msg.sender != s_originalMinter[tokenId]) revert ChatterPayNFT__Unauthorized();
         if(newLimit < s_copyCount[tokenId]) revert ChatterPayNFT__LimitExceedsCopies();
         s_copyLimit[tokenId] = newLimit;
