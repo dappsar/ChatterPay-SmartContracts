@@ -10,10 +10,10 @@ import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 import {ChatterPayPaymaster} from "../src/L2/ChatterPayPaymaster.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
 import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
+import {Upgrades} from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract DeployChatterPay is Script {
-    
     uint256 ethSepoliaChainId = 11155111;
     uint256 scrollSepoliaChainId = 534351;
     uint256 scrollDevnetChainId = 2227728;
@@ -84,11 +84,13 @@ contract DeployChatterPay is Script {
         // factory = new ChatterPayWalletFactory{
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(address(beacon), config.entryPoint, config.account, paymaster);
-        factory = new ChatterPayWalletFactory(address(beacon), config.entryPoint, config.account, address(paymaster));
-        console.log(
-            "WalletFactory deployed to address %s",
-            address(factory)
+        factory = new ChatterPayWalletFactory(
+            address(beacon),
+            config.entryPoint,
+            config.account,
+            address(paymaster)
         );
+        console.log("WalletFactory deployed to address %s", address(factory));
 
         chatterPay.initialize(
             config.entryPoint,
@@ -100,12 +102,19 @@ contract DeployChatterPay is Script {
         // Deploy ChatterPayNFT
         // main: "https://chatterpay-back-671609149217.us-central1.run.app/"
         // dev: "https://chatterpay-back-staging-671609149217.us-central1.run.app/"
-        string memory baseURI = "";
-        chatterPayNFT = new ChatterPayNFT(config.account, baseURI);
-        console.log(
-            "ChatterPayNFT deployed to address %s",
-            address(chatterPayNFT)
+        string memory baseURI = "https://chatterpay-back-staging-671609149217.us-central1.run.app/";
+        address proxyNFT = Upgrades.deployUUPSProxy(
+            "ChatterPayNFT.sol",
+            abi.encodeCall(
+                ChatterPayNFT.initialize, (config.account, baseURI)
+            )
         );
+
+        console.log(
+            "proxyNFT deployed to address %s",
+            address(proxyNFT)
+        );
+        chatterPayNFT = ChatterPayNFT(proxyNFT);
         chatterPayNFT.setAuthorized(backendEOA, true);
         console.log("ChatterPayNFT: backend EOA authorized");
 

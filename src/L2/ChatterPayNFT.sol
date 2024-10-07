@@ -2,16 +2,18 @@
 // Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import {ERC721URIStorageUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+
 
 error ChatterPayNFT__Unauthorized();
 error ChatterPayNFT__TokenAlreadyMinted(uint256);
 error ChatterPayNFT__OriginalTokenNotMinted(uint256);
 error ChatterPayNFT__LimitExceedsCopies();
 
-contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
+contract ChatterPayNFT is UUPSUpgradeable, ERC721Upgradeable, ERC721URIStorageUpgradeable, OwnableUpgradeable {
     
     uint256 private s_tokenId;
     mapping (address => bool) public s_authorized;
@@ -29,12 +31,14 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
         _;
     }
 
-    constructor(address initialOwner, string memory baseURI)
-        ERC721("ChatterPayNFT", "CHTP")
-        Ownable(initialOwner)
-    {
+    function initialize(address initialOwner, string memory baseURI) public initializer {
+        __ERC721_init("ChatterPayNFT", "CHTP");
+        __Ownable_init(initialOwner);
         s_baseURI = baseURI;
     }
+
+    ///@dev required by the OZ UUPS module
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     function _baseURI() internal view override returns (string memory) {
         return s_baseURI;
@@ -81,7 +85,7 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     function tokenURI(uint256 tokenId)
         public
         view
-        override(ERC721, ERC721URIStorage)
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
         returns (string memory)
     {
         return super.tokenURI(tokenId);
@@ -90,7 +94,7 @@ contract ChatterPayNFT is ERC721, ERC721URIStorage, Ownable {
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721URIStorage)
+        override(ERC721Upgradeable, ERC721URIStorageUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
