@@ -23,7 +23,6 @@ import {ITokensPriceFeeds} from "../Ethereum/TokensPriceFeeds.sol";
 error ChatterPay__NotFromEntryPoint();
 error ChatterPay__NotFromEntryPointOrOwner();
 error ChatterPay__ExecuteCallFailed(bytes);
-error ChatterPay__L1SLoadFailed();
 error ChatterPay__UnsopportedTokenDecimals();
 error ChatterPay__API3Failed();
 error ChatterPay__UnsopportedToken();
@@ -34,12 +33,7 @@ error ChatterPay__UnsopportedToken();
 
 interface IERC20 {
     function symbol() external view returns (string memory);
-
     function decimals() external view returns (uint8);
-}
-
-interface IL1Blocks {
-    function latestBlockNumber() external view returns (uint256);
 }
 
 /*//////////////////////////////////////////////////////////////
