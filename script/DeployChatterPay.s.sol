@@ -5,7 +5,6 @@ pragma solidity 0.8.24;
 import {Script, console} from "forge-std/Script.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
-import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 import {ChatterPayPaymaster} from "../src/L2/ChatterPayPaymaster.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
@@ -21,7 +20,6 @@ contract DeployChatterPay is Script {
 
     HelperConfig helperConfig;
     ChatterPay chatterPay;
-    ChatterPayBeacon beacon;
     ChatterPayWalletFactory factory;
     ChatterPayPaymaster paymaster;
     TokensPriceFeeds tokensPriceFeeds;
@@ -38,7 +36,6 @@ contract DeployChatterPay is Script {
         returns (
             HelperConfig,
             ChatterPay,
-            ChatterPayBeacon,
             ChatterPayWalletFactory,
             TokensPriceFeeds,
             ChatterPayNFT
@@ -63,14 +60,6 @@ contract DeployChatterPay is Script {
         chatterPay = new ChatterPay();
         console.log("ChatterPay deployed to address %s", address(chatterPay));
 
-        // Deploy Beacon (with Logic address as parameter)
-        // CREATE2 for production
-        // beacon = new ChatterPayBeacon{
-        //     salt: keccak256(abi.encodePacked(config.account))
-        // }(address(chatterPay), config.account);
-        beacon = new ChatterPayBeacon(address(chatterPay), config.account);
-        console.log("Beacon deployed to address %s", address(beacon));
-
         // Deploy Paymaster
         // CREATE2 for production
         // paymaster = new ChatterPayPaymaster{
@@ -79,12 +68,12 @@ contract DeployChatterPay is Script {
         paymaster = new ChatterPayPaymaster();
         console.log("Paymaster deployed to address %s", address(paymaster));
 
-        // Deploy Factory (with Beacon, EntryPoint, Account & Paymaster addresses as parameters)
+        // Deploy Factory (with Wallet Implementation, EntryPoint, Account & Paymaster addresses as parameters)
         // CREATE2 for production
         // factory = new ChatterPayWalletFactory{
         //     salt: keccak256(abi.encodePacked(config.account))
-        // }(address(beacon), config.entryPoint, config.account, paymaster);
-        factory = new ChatterPayWalletFactory(address(beacon), config.entryPoint, config.account, address(paymaster));
+        // }(address(chatterPay), config.entryPoint, config.account, paymaster);
+        factory = new ChatterPayWalletFactory(address(chatterPay), config.entryPoint, config.account, address(paymaster));
         console.log(
             "WalletFactory deployed to address %s",
             address(factory)
@@ -114,7 +103,6 @@ contract DeployChatterPay is Script {
         return (
             helperConfig,
             chatterPay,
-            beacon,
             factory,
             tokensPriceFeeds,
             chatterPayNFT

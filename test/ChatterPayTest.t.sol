@@ -7,7 +7,6 @@ import {DeployChatterPay} from "../script/DeployChatterPay.s.sol";
 import {HelperConfig} from "../script/HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
-import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
 import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
@@ -16,7 +15,6 @@ import {SendPackedUserOp, UserOperation, IEntryPoint} from "script/SendPackedUse
 contract ChatterPayTest is Test {
     HelperConfig helperConfig;
     ChatterPay chatterPay;
-    ChatterPayBeacon beacon;
     ChatterPayWalletFactory factory;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
@@ -34,7 +32,6 @@ contract ChatterPayTest is Test {
         (
             helperConfig,
             chatterPay,
-            beacon,
             factory,
             tokensPriceFeeds,
             chatterPayNFT
@@ -42,7 +39,6 @@ contract ChatterPayTest is Test {
         usdc = ERC20Mock(helperConfig.getConfig().usdc);
         sendPackedUserOp = new SendPackedUserOp();
         chatterPay = chatterPay;
-        beacon = beacon;
         factory = factory;
         deployer = helperConfig.getConfig().account;
     }
@@ -51,14 +47,6 @@ contract ChatterPayTest is Test {
         address proxy = factory.createProxy(user);
         assertEq(factory.getProxiesCount(), 1, "There should be 1 proxy");
         return proxy;
-    }
-
-    function testSetup() public view {
-        assertEq(
-            address(chatterPay),
-            address(beacon.implementation()),
-            "ChatterPay and Beacon should have the same implementation"
-        );
     }
 
     function testOwners() public view {

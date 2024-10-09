@@ -100,6 +100,7 @@ contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
     ) public initializer {
         s_entryPoint = IEntryPoint(_entryPoint);
         __Ownable_init(_newOwner);
+        __UUPSUpgradeable_init();
         s_paymaster = _paymaster;
         s_supportedStableTokens = ["USDT"];
         s_supportedNotStableTokens = ["WETH", "WBTC"];
