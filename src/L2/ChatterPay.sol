@@ -6,15 +6,15 @@ pragma solidity ^0.8.24;
                                 IMPORTS
 //////////////////////////////////////////////////////////////*/
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IAccount, UserOperation} from "lib/entry-point-v6/interfaces/IAccount.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/entry-point-v6/interfaces/IEntryPoint.sol";
 import {ITokensPriceFeeds} from "../Ethereum/TokensPriceFeeds.sol";
-import {console} from "forge-std/console.sol";
 
 /*//////////////////////////////////////////////////////////////
                                 ERRORS
@@ -46,7 +46,7 @@ interface IL1Blocks {
                                 CONTRACT
 //////////////////////////////////////////////////////////////*/
 
-contract ChatterPay is IAccount, OwnableUpgradeable {
+contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
@@ -225,7 +225,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         string[2]
             memory m_supportedNotStableTokens = s_supportedNotStableTokens;
         for (uint256 i; i < m_supportedStableTokens.length; i++) {
-            console.log("Checking %s", m_supportedStableTokens[i]);
             if (
                 keccak256(abi.encodePacked(_symbol)) ==
                 keccak256(abi.encodePacked(m_supportedStableTokens[i]))
@@ -234,7 +233,6 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
             }
         }
         for (uint256 i; i < m_supportedNotStableTokens.length; i++) {
-            console.log("Checking %s", m_supportedNotStableTokens[i]);
             if (
                 keccak256(abi.encodePacked(_symbol)) ==
                 keccak256(abi.encodePacked(m_supportedNotStableTokens[i]))
@@ -268,6 +266,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         uint256 fee = (dollarsIn18Decimals * 10 ** 18) / oraclePrice;
         return fee;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
