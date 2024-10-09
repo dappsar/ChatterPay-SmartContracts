@@ -6,6 +6,7 @@ import {Script, console} from "forge-std/Script.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayBeacon} from "../src/L2/ChatterPayBeacon.sol";
+import {BeaconAccessor} from "../src/L2/BeaconAccessor.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 import {ChatterPayPaymaster} from "../src/L2/ChatterPayPaymaster.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
@@ -24,6 +25,7 @@ contract DeployChatterPay is Script {
     ChatterPayBeacon beacon;
     ChatterPayWalletFactory factory;
     ChatterPayPaymaster paymaster;
+    BeaconAccessor beaconAccessor;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
 
@@ -68,8 +70,20 @@ contract DeployChatterPay is Script {
         // beacon = new ChatterPayBeacon{
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(address(chatterPay), config.account);
+        console.log("Chatterpay address que se le pasa al beacon: %s", address(chatterPay));
         beacon = new ChatterPayBeacon(address(chatterPay), config.account);
         console.log("Beacon deployed to address %s", address(beacon));
+
+        // Deploy BeaconAccessor (with Beacon address as parameter)
+        // CREATE2 for production
+        // beaconAccessor = new BeaconAccessor{
+        //     salt: keccak256(abi.encodePacked(config.account))
+        // }(address(beacon));
+        beaconAccessor = new BeaconAccessor(address(beacon));
+        console.log(
+            "BeaconAccessor deployed to address %s",
+            address(beaconAccessor)
+        );
 
         // Deploy Paymaster
         // CREATE2 for production
@@ -88,7 +102,8 @@ contract DeployChatterPay is Script {
             address(beacon),
             config.entryPoint,
             config.account,
-            address(paymaster)
+            address(paymaster),
+            address(beaconAccessor)
         );
         console.log("WalletFactory deployed to address %s", address(factory));
 
@@ -102,18 +117,14 @@ contract DeployChatterPay is Script {
         // Deploy ChatterPayNFT
         // main: "https://chatterpay-back-671609149217.us-central1.run.app/"
         // dev: "https://chatterpay-back-staging-671609149217.us-central1.run.app/"
-        string memory baseURI = "https://chatterpay-back-staging-671609149217.us-central1.run.app/";
+        string
+            memory baseURI = "https://chatterpay-back-staging-671609149217.us-central1.run.app/";
         address proxyNFT = Upgrades.deployUUPSProxy(
             "ChatterPayNFT.sol",
-            abi.encodeCall(
-                ChatterPayNFT.initialize, (config.account, baseURI)
-            )
+            abi.encodeCall(ChatterPayNFT.initialize, (config.account, baseURI))
         );
 
-        console.log(
-            "proxyNFT deployed to address %s",
-            address(proxyNFT)
-        );
+        console.log("proxyNFT deployed to address %s", address(proxyNFT));
         chatterPayNFT = ChatterPayNFT(proxyNFT);
         chatterPayNFT.setAuthorized(backendEOA, true);
         console.log("ChatterPayNFT: backend EOA authorized");

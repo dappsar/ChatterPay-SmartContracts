@@ -14,7 +14,6 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/entry-point-v6/interfaces/IEntryPoint.sol";
 import {ITokensPriceFeeds} from "../Ethereum/TokensPriceFeeds.sol";
-import {console} from "forge-std/console.sol";
 
 /*//////////////////////////////////////////////////////////////
                                 ERRORS

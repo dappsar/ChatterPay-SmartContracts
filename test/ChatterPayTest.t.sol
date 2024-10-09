@@ -72,6 +72,7 @@ contract ChatterPayTest is Test {
     function testDeployProxy() public {
         vm.startPrank(deployer);
         address proxy = factory.createProxy(RANDOM_USER);
+        console.log("Proxy Address:", proxy);
         assertEq(
             factory.proxies(0),
             proxy,
