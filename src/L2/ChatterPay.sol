@@ -7,7 +7,6 @@ pragma solidity ^0.8.24;
 //////////////////////////////////////////////////////////////*/
 
 import {IAccount, UserOperation} from "lib/entry-point-v6/interfaces/IAccount.sol";
-import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
