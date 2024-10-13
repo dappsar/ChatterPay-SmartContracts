@@ -13,6 +13,7 @@ import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, UserOperation, IEntryPoint} from "script/SendPackedUserOp.s.sol";
 
 contract ChatterPayTest is Test {
+    
     HelperConfig helperConfig;
     ChatterPay chatterPay;
     ChatterPayWalletFactory factory;
@@ -49,11 +50,21 @@ contract ChatterPayTest is Test {
         return proxy;
     }
 
-    function testOwners() public view {
+    function testFactoryOwner() public view {
         assertEq(
             factory.owner(),
             deployer,
-            "Owner should be the test contract"
+            "Owner should be the burner wallet"
+        );
+    }
+
+    function testProxyOwner() public {
+        address proxy = createProxyForUser(RANDOM_USER);
+        (bool success, bytes memory owner) = proxy.call(abi.encodeWithSignature("owner()"));
+        assertEq(
+            abi.decode(owner, (address)),
+            RANDOM_USER,
+            "Proxy owner should be RANDOM_USER"
         );
     }
 
@@ -66,6 +77,18 @@ contract ChatterPayTest is Test {
             "Proxy should be stored in the factory"
         );
     }
+
+    function testProxyImplementationShouldBeChatterPayImplementation() public {
+        address proxy = createProxyForUser(RANDOM_USER);
+        (bool success, bytes memory implementation) = proxy.call(abi.encodeWithSignature("getImplementation()"));
+        assertEq(
+            abi.decode(implementation, (address)),
+            address(chatterPay),
+            "Proxy implementation should be ChatterPay"
+        );
+    }
+
+    function testAuthorizeUpgradeShouldSucceedIfCalledByOwner() public {}
 
     function testComputeAddressMustBeEqualToCreateProxyAddress() public {
         address proxy = factory.createProxy(RANDOM_USER);
@@ -209,64 +232,64 @@ contract ChatterPayTest is Test {
         vm.stopPrank();
     }
 
-    // function testTransferUSDCWithFee() public {
-    //     vm.startPrank(deployer);
+    function skip_testTransferUSDCWithFee() public {
+        vm.startPrank(deployer);
 
-    //     address proxyAddress = createProxyForUser(ANVIL_DEFAULT_USER);
+        address proxyAddress = createProxyForUser(ANVIL_DEFAULT_USER);
 
-    //     // Assign ETH to proxy for gas
-    //     vm.deal(proxyAddress, 1 ether);
+        // Assign ETH to proxy for gas
+        vm.deal(proxyAddress, 1 ether);
 
-    //     // Set up destination, value and null initCode
-    //     address dest = helperConfig.getConfig().usdc;
-    //     uint256 fee = 500000000000000000; // ERC20 contract with 18 decimals (50 cents)
-    //     bytes memory initCode = hex"";
+        // Set up destination, value and null initCode
+        address dest = helperConfig.getConfig().usdc;
+        uint256 fee = 500000000000000000; // ERC20 contract with 18 decimals (50 cents)
+        bytes memory initCode = hex"";
 
-    //     // Mint USDC to Proxy
-    //     ERC20Mock(dest).mint(proxyAddress, 1e18);
+        // Mint USDC to Proxy
+        ERC20Mock(dest).mint(proxyAddress, 1e18);
 
-    //     // Encode transfer function call
-    //     bytes memory functionData = abi.encodeWithSelector(
-    //         usdc.transfer.selector,
-    //         RANDOM_APPROVER,
-    //         1e6
-    //     );
-    //     bytes memory executeCalldata = abi.encodeWithSelector(
-    //         ChatterPay.executeTokenTransfer.selector,
-    //         dest,
-    //         fee,
-    //         functionData
-    //     );
+        // Encode transfer function call
+        bytes memory functionData = abi.encodeWithSelector(
+            usdc.transfer.selector,
+            RANDOM_APPROVER,
+            1e6
+        );
+        bytes memory executeCalldata = abi.encodeWithSelector(
+            ChatterPay.executeTokenTransfer.selector,
+            dest,
+            fee,
+            functionData
+        );
 
-    //     // Generate signed user operation
-    //     UserOperation memory userOp = sendPackedUserOp
-    //         .generateSignedUserOperation(
-    //             initCode,
-    //             executeCalldata,
-    //             helperConfig.getConfig(),
-    //             proxyAddress,
-    //             ANVIL_DEFAUL_USER_KEY
-    //         );
-    //     UserOperation[] memory ops = new UserOperation[](1);
-    //     ops[0] = userOp;
+        // Generate signed user operation
+        UserOperation memory userOp = sendPackedUserOp
+            .generateSignedUserOperation(
+                initCode,
+                executeCalldata,
+                helperConfig.getConfig(),
+                proxyAddress,
+                ANVIL_DEFAUL_USER_KEY
+            );
+        UserOperation[] memory ops = new UserOperation[](1);
+        ops[0] = userOp;
 
-    //     // Execute handleOps
-    //     IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(
-    //         ops,
-    //         payable(proxyAddress)
-    //     );
+        // Execute handleOps
+        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(
+            ops,
+            payable(proxyAddress)
+        );
 
-    //     // Check balance
-    //     uint256 balance = ERC20Mock(dest).balanceOf(RANDOM_APPROVER);
-    //     console.log("Balance after operation:", balance);
+        // Check balance
+        uint256 balance = ERC20Mock(dest).balanceOf(RANDOM_APPROVER);
+        console.log("Balance after operation:", balance);
 
-    //     // Assert expected allowance
-    //     assertEq(
-    //         balance,
-    //         1e6,
-    //         " RANDOM_APPROVER should have a balance of 1e17"
-    //     );
+        // Assert expected allowance
+        assertEq(
+            balance,
+            1e6,
+            " RANDOM_APPROVER should have a balance of 1e17"
+        );
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 }
