@@ -25,6 +25,10 @@ error ChatterPay__ExecuteCallFailed(bytes);
 error ChatterPay__UnsopportedTokenDecimals();
 error ChatterPay__API3Failed();
 error ChatterPay__UnsopportedToken();
+error ChatterPay__InvalidAmountOfTokens();
+error ChatterPay__InvalidTokenReceiver();
+error ChatterPay__NoTokenBalance(address);
+error ChatterPay__BalanceTxFailed();
 
 /*//////////////////////////////////////////////////////////////
                                INTERFACES
@@ -33,6 +37,8 @@ error ChatterPay__UnsopportedToken();
 interface IERC20 {
     function symbol() external view returns (string memory);
     function decimals() external view returns (uint8);
+    function balanceOf(address account) external view returns (uint256);
+    function transfer(address to, uint256 value) external returns (bool);
 }
 
 /*//////////////////////////////////////////////////////////////
@@ -69,6 +75,7 @@ contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
         bytes functionData
     );
     event EntryPointSet(address indexed entryPoint);
+    event WithdrawBalance(address[] indexed, address indexed to);
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -97,9 +104,9 @@ contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
         address _newOwner,
         address _paymaster
     ) public initializer {
-        s_entryPoint = IEntryPoint(_entryPoint);
         __Ownable_init(_newOwner);
         __UUPSUpgradeable_init();
+        s_entryPoint = IEntryPoint(_entryPoint);
         s_paymaster = _paymaster;
         s_supportedStableTokens = ["USDT"];
         s_supportedNotStableTokens = ["WETH", "WBTC"];
@@ -159,6 +166,39 @@ contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
         validationData = _validateSignature(userOp, userOpHash);
         // _validateNonce()
         _payPrefund(missingAccountFunds);
+    }
+
+    function withdrawBalance(
+        address[] memory tokenAddresses,
+        address to
+    ) external onlyOwner returns (bool) {
+        if (
+            tokenAddresses.length >
+            s_supportedNotStableTokens.length + s_supportedStableTokens.length
+        ) {
+            revert ChatterPay__InvalidAmountOfTokens();
+        }
+        if (to == address(0) || to.code.length > 0)
+            revert ChatterPay__InvalidTokenReceiver();
+
+        for (uint256 i; i < tokenAddresses.length; i++) {
+            if (tokenAddresses[i] == address(0)) {
+                (bool success, ) = payable(to).call{
+                    value: address(this).balance
+                }("");
+                if (!success) revert ChatterPay__BalanceTxFailed();
+            } else {
+                IERC20 token = IERC20(tokenAddresses[i]);
+                uint256 balance = token.balanceOf(address(this));
+                if (balance == 0)
+                    revert ChatterPay__NoTokenBalance(tokenAddresses[i]);
+                bool success = token.transfer(to, balance);
+                if (!success) revert ChatterPay__BalanceTxFailed();
+            }
+        }
+
+        emit WithdrawBalance(tokenAddresses, to);
+        return true;
     }
 
     function setEntryPoint(address _entryPoint) external onlyOwner {
