@@ -7,7 +7,6 @@ pragma solidity ^0.8.24;
 //////////////////////////////////////////////////////////////*/
 
 import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
-import {ChatterPay} from "./ChatterPay.sol";
 import {ChatterPayWalletProxy} from "./ChatterPayWalletProxy.sol";
 
 /*//////////////////////////////////////////////////////////////
@@ -70,8 +69,8 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
             salt: keccak256(abi.encodePacked(_owner))
         }(
             walletImplementation,
-            abi.encodeWithSelector(
-                ChatterPay.initialize.selector,
+            abi.encodeWithSignature(
+                "initialize(address,address,address)",
                 entryPoint,
                 _owner,
                 paymaster
@@ -110,8 +109,8 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     //////////////////////////////////////////////////////////////*/
 
     function getProxyBytecode(address _owner) internal view returns (bytes memory) {
-        bytes memory initializationCode = abi.encodeWithSelector(
-            ChatterPay.initialize.selector,
+        bytes memory initializationCode = abi.encodeWithSignature(
+            "initialize(address,address,address)",
             entryPoint,
             _owner,
             paymaster
