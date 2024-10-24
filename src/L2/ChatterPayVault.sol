@@ -34,12 +34,12 @@ contract ChatterPayVault {
         uint256 _amount,
         bytes32 _passwordHash
     ) public {
-        IERC20(_erc20).transferFrom(msg.sender, address(this), _amount);
         reservedPayments[msg.sender][_erc20][_id] = Payment({
             balance: _amount,
             passwordHash: _passwordHash,
             redeemer: address(0) // Optional: Set to a specific address if known
         });
+        IERC20(_erc20).transferFrom(msg.sender, address(this), _amount);
         emit PaymentReserved(msg.sender, _erc20, _amount);
     }
 
