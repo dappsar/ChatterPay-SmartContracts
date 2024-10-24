@@ -22,7 +22,6 @@ contract DeployChatterPay is Script {
     ChatterPay chatterPay;
     ChatterPayWalletFactory factory;
     ChatterPayPaymaster paymaster;
-    BeaconAccessor beaconAccessor;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
 

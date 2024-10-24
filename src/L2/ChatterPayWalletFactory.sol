@@ -42,7 +42,6 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
-    BeaconAccessor public beaconAccessor;
     address[] public proxies;
     address immutable entryPoint;
     address public walletImplementation;
@@ -63,7 +62,6 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         walletImplementation = _walletImplementation;
         entryPoint = _entryPoint;
         paymaster = _paymaster;
-        beaconAccessor = BeaconAccessor(payable(_beaconAccessor));
     }
 
     /*//////////////////////////////////////////////////////////////
