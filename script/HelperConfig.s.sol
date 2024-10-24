@@ -33,7 +33,6 @@ contract HelperConfig is Script {
     uint256 constant OPTIMISM_SEPOLIA_CHAIN_ID = 11155420;
     uint256 constant LOCAL_CHAIN_ID = 31337;
     address constant BURNER_WALLET = 0x08f88ef7ecD64a2eA1f3887d725F78DDF1bacDF1;
-    // address constant FOUNDRY_DEFAULT_WALLET = 0x1804c8AB1F12E6bbf3894d4083f33e07309d1f38;
     address constant ANVIL_DEFAULT_ACCOUNT =
         0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 

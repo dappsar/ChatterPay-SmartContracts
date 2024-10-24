@@ -55,12 +55,11 @@ contract ChatterPayNFT is UUPSUpgradeable, ERC721Upgradeable, ERC721URIStorageUp
         _setTokenURI(tokenId, uri);
     }
 
-    function mintCopy(address to, uint256 originalTokenId) public onlyOwnerOrAuthorized {
+    function mintCopy(address to, uint256 originalTokenId, string memory uri) public onlyOwnerOrAuthorized {
         if(s_originalMinter[originalTokenId] == address(0)) revert ChatterPayNFT__OriginalTokenNotMinted(originalTokenId);
         if(s_copyCount[originalTokenId] >= s_copyLimit[originalTokenId]) revert ChatterPayNFT__LimitExceedsCopies();
         s_copyCount[originalTokenId]++;
         uint256 copyTokenId = originalTokenId * 10**8 + s_copyCount[originalTokenId];
-        string memory uri = tokenURI(originalTokenId);
         _safeMint(to, copyTokenId);
         _setTokenURI(copyTokenId, uri);
     }

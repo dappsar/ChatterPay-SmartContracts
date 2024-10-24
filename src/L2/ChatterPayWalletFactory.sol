@@ -6,11 +6,8 @@ pragma solidity ^0.8.24;
                             IMPORTS
 //////////////////////////////////////////////////////////////*/
 
-// import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ChatterPay} from "./ChatterPay.sol";
-import {CustomBeaconProxy} from "./ChatterPayCustomBeaconProxy.sol";
-import {BeaconAccessor} from "./BeaconAccessor.sol";
+import {Ownable} from "lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import {ChatterPayWalletProxy} from "./ChatterPayWalletProxy.sol";
 
 /*//////////////////////////////////////////////////////////////
                                 ERRORS
@@ -48,7 +45,7 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     BeaconAccessor public beaconAccessor;
     address[] public proxies;
     address immutable entryPoint;
-    address public immutable beacon;
+    address public walletImplementation;
     address public paymaster;
 
     /*//////////////////////////////////////////////////////////////
@@ -56,19 +53,14 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     //////////////////////////////////////////////////////////////*/
 
     event ProxyCreated(address indexed owner, address indexed proxyAddress);
+    event NewImplementation(address indexed _walletImplementation);
 
     /*//////////////////////////////////////////////////////////////
                                FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address _beacon,
-        address _entryPoint,
-        address _owner,
-        address _paymaster,
-        address _beaconAccessor
-    ) Ownable(_owner) {
-        beacon = _beacon;
+    constructor(address _walletImplementation, address _entryPoint, address _owner, address _paymaster) Ownable(_owner) {
+        walletImplementation = _walletImplementation;
         entryPoint = _entryPoint;
         paymaster = _paymaster;
         beaconAccessor = BeaconAccessor(payable(_beaconAccessor));
@@ -79,14 +71,13 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     //////////////////////////////////////////////////////////////*/
 
     function createProxy(address _owner) public returns (address) {
-        if (_owner == address(0))
-            revert ChatterPayWalletFactory__InvalidOwner();
-        CustomBeaconProxy walletProxy = new CustomBeaconProxy{
+        if(_owner == address(0)) revert ChatterPayWalletFactory__InvalidOwner();
+        ChatterPayWalletProxy walletProxy = new ChatterPayWalletProxy{
             salt: keccak256(abi.encodePacked(_owner))
         }(
-            address(beaconAccessor),
-            abi.encodeWithSelector(
-                ChatterPay.initialize.selector,
+            walletImplementation,
+            abi.encodeWithSignature(
+                "initialize(address,address,address)",
                 entryPoint,
                 _owner,
                 paymaster
@@ -100,6 +91,11 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     function getProxyOwner(address proxy) public returns (bytes memory) {
         (, bytes memory data) = proxy.call(abi.encodeWithSignature("owner()"));
         return data;
+    }
+
+    function setImplementationAddress(address _walletImplementation) public onlyOwner {
+        walletImplementation = _walletImplementation;
+        emit NewImplementation(_walletImplementation);
     }
 
     function computeProxyAddress(address _owner) public view returns (address) {
@@ -119,20 +115,17 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getProxyBytecode(
-        address _owner
-    ) internal view returns (bytes memory) {
-        bytes memory initializationCode = abi.encodeWithSelector(
-            ChatterPay.initialize.selector,
+    function getProxyBytecode(address _owner) internal view returns (bytes memory) {
+        bytes memory initializationCode = abi.encodeWithSignature(
+            "initialize(address,address,address)",
             entryPoint,
             _owner,
             paymaster
         );
-        return
-            abi.encodePacked(
-                type(CustomBeaconProxy).creationCode,
-                abi.encode(beaconAccessor, initializationCode)
-            );
+        return abi.encodePacked(
+            type(ChatterPayWalletProxy).creationCode,
+            abi.encode(walletImplementation, initializationCode)
+        );
     }
 
     /*//////////////////////////////////////////////////////////////

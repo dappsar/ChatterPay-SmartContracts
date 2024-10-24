@@ -6,8 +6,8 @@ pragma solidity ^0.8.24;
                                 IMPORTS
 //////////////////////////////////////////////////////////////*/
 
-import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {IAccount, UserOperation} from "lib/entry-point-v6/interfaces/IAccount.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -22,7 +22,6 @@ import {ITokensPriceFeeds} from "../Ethereum/TokensPriceFeeds.sol";
 error ChatterPay__NotFromEntryPoint();
 error ChatterPay__NotFromEntryPointOrOwner();
 error ChatterPay__ExecuteCallFailed(bytes);
-error ChatterPay__L1SLoadFailed();
 error ChatterPay__UnsopportedTokenDecimals();
 error ChatterPay__API3Failed();
 error ChatterPay__UnsopportedToken();
@@ -37,11 +36,8 @@ error ChatterPay__BalanceTxFailed();
 
 interface IERC20 {
     function symbol() external view returns (string memory);
-
     function decimals() external view returns (uint8);
-
     function balanceOf(address account) external view returns (uint256);
-
     function transfer(address to, uint256 value) external returns (bool);
 }
 
@@ -49,7 +45,7 @@ interface IERC20 {
                                 CONTRACT
 //////////////////////////////////////////////////////////////*/
 
-contract ChatterPay is IAccount, OwnableUpgradeable {
+contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
     /*//////////////////////////////////////////////////////////////
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
@@ -108,8 +104,9 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         address _newOwner,
         address _paymaster
     ) public initializer {
-        s_entryPoint = IEntryPoint(_entryPoint);
         __Ownable_init(_newOwner);
+        __UUPSUpgradeable_init();
+        s_entryPoint = IEntryPoint(_entryPoint);
         s_paymaster = _paymaster;
         s_supportedStableTokens = ["USDT"];
         s_supportedNotStableTokens = ["WETH", "WBTC"];
@@ -307,6 +304,8 @@ contract ChatterPay is IAccount, OwnableUpgradeable {
         uint256 fee = (dollarsIn18Decimals * 10 ** 18) / oraclePrice;
         return fee;
     }
+
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
