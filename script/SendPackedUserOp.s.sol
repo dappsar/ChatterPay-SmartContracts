@@ -25,6 +25,7 @@ contract SendPackedUserOp is Script {
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         address ANVIL_DEFAULT_USER = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
         uint256 ANVIL_DEFAUL_USER_KEY = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
+        address chatterPayPaymasterAddress = DevOpsTools.get_most_recent_deployment("ChatterPayPaymaster", block.chainid);
 
         address dest = config.usdc;
         uint256 value = 0;
@@ -51,7 +52,7 @@ contract SendPackedUserOp is Script {
 
         
         UserOperation memory userOp =
-            generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress, ANVIL_DEFAUL_USER_KEY);
+            generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress, ANVIL_DEFAUL_USER_KEY, chatterPayPaymasterAddress);
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
@@ -66,11 +67,12 @@ contract SendPackedUserOp is Script {
         bytes memory callData,
         HelperConfig.NetworkConfig memory config,
         address chatterPayProxy,
-        uint256 key
+        uint256 key,
+        address paymaster
     ) public view returns (UserOperation memory) {
         // 1. Generate the unsigned data
         // uint256 nonce = vm.getNonce(chatterPayProxy);
-        UserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy);
+        UserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy, paymaster);
 
         // 2. Get the userOp Hash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
@@ -89,7 +91,7 @@ contract SendPackedUserOp is Script {
         return userOp;
     }
 
-    function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender)
+    function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender, address paymaster)
         internal
         pure
         returns (UserOperation memory)
@@ -108,7 +110,7 @@ contract SendPackedUserOp is Script {
             preVerificationGas: verificationGasLimit,
             maxFeePerGas: maxFeePerGas,
             maxPriorityFeePerGas: maxPriorityFeePerGas,
-            paymasterAndData: hex"",
+            paymasterAndData: abi.encodePacked(paymaster),
             signature: hex""
         });
     }

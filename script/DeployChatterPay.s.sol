@@ -38,7 +38,8 @@ contract DeployChatterPay is Script {
             ChatterPay,
             ChatterPayWalletFactory,
             TokensPriceFeeds,
-            ChatterPayNFT
+            ChatterPayNFT,
+            ChatterPayPaymaster
         )
     {
         // Deploy HelperConfig
@@ -65,7 +66,7 @@ contract DeployChatterPay is Script {
         // paymaster = new ChatterPayPaymaster{
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(config.account);
-        paymaster = new ChatterPayPaymaster();
+        paymaster = new ChatterPayPaymaster(config.entryPoint);
         console.log("Paymaster deployed to address %s", address(paymaster));
 
         // Deploy Factory (with Wallet Implementation, EntryPoint, Account & Paymaster addresses as parameters)
@@ -108,7 +109,8 @@ contract DeployChatterPay is Script {
             chatterPay,
             factory,
             tokensPriceFeeds,
-            chatterPayNFT
+            chatterPayNFT,
+            paymaster
         );
     }
 }

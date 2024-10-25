@@ -9,16 +9,18 @@ import {ChatterPay} from "../src/L2/ChatterPay.sol";
 import {ChatterPayWalletFactory} from "../src/L2/ChatterPayWalletFactory.sol";
 import {TokensPriceFeeds} from "../src/Ethereum/TokensPriceFeeds.sol";
 import {ChatterPayNFT} from "../src/L2/ChatterPayNFT.sol";
+import {ChatterPayPaymaster} from "../src/L2/ChatterPayPaymaster.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {SendPackedUserOp, UserOperation, IEntryPoint} from "script/SendPackedUserOp.s.sol";
 
 contract ChatterPayTest is Test {
-    
     HelperConfig helperConfig;
     ChatterPay chatterPay;
     ChatterPayWalletFactory factory;
     TokensPriceFeeds tokensPriceFeeds;
     ChatterPayNFT chatterPayNFT;
+    ChatterPayPaymaster paymaster;
+    IEntryPoint entryPoint;
     ERC20Mock usdc;
     SendPackedUserOp sendPackedUserOp;
     address deployer;
@@ -35,13 +37,15 @@ contract ChatterPayTest is Test {
             chatterPay,
             factory,
             tokensPriceFeeds,
-            chatterPayNFT
+            chatterPayNFT,
+            paymaster
         ) = deployChatterPay.deployChatterPayOnL2();
         usdc = ERC20Mock(helperConfig.getConfig().usdc);
         sendPackedUserOp = new SendPackedUserOp();
         chatterPay = chatterPay;
         factory = factory;
         deployer = helperConfig.getConfig().account;
+        entryPoint = IEntryPoint(helperConfig.getConfig().entryPoint);
     }
 
     function createProxyForUser(address user) public returns (address) {
@@ -60,7 +64,9 @@ contract ChatterPayTest is Test {
 
     function testProxyOwner() public {
         address proxy = createProxyForUser(RANDOM_USER);
-        (bool success, bytes memory owner) = proxy.call(abi.encodeWithSignature("owner()"));
+        (bool success, bytes memory owner) = proxy.call(
+            abi.encodeWithSignature("owner()")
+        );
         assertEq(
             abi.decode(owner, (address)),
             RANDOM_USER,
@@ -81,7 +87,9 @@ contract ChatterPayTest is Test {
 
     function testProxyImplementationShouldBeChatterPayImplementation() public {
         address proxy = createProxyForUser(RANDOM_USER);
-        (bool success, bytes memory implementation) = proxy.call(abi.encodeWithSignature("getImplementation()"));
+        (bool success, bytes memory implementation) = proxy.call(
+            abi.encodeWithSignature("getImplementation()")
+        );
         assertEq(
             abi.decode(implementation, (address)),
             address(chatterPay),
@@ -106,6 +114,9 @@ contract ChatterPayTest is Test {
 
         address proxyAddress = createProxyForUser(ANVIL_DEFAULT_USER);
 
+        vm.deal(deployer, 1 ether);
+        entryPoint.depositTo{value: 1 ether}(address(paymaster));
+        
         // Assign ETH to proxy for gas
         vm.deal(proxyAddress, 1 ether);
 
@@ -134,16 +145,14 @@ contract ChatterPayTest is Test {
                 executeCalldata,
                 helperConfig.getConfig(),
                 proxyAddress,
-                ANVIL_DEFAUL_USER_KEY
+                ANVIL_DEFAUL_USER_KEY,
+                address(paymaster)
             );
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
         // Execute handleOps
-        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(
-            ops,
-            payable(proxyAddress)
-        );
+        entryPoint.handleOps(ops, payable(proxyAddress));
 
         // Check allowance
         uint256 allowance = ERC20Mock(dest).allowance(
@@ -168,6 +177,9 @@ contract ChatterPayTest is Test {
         // Compute new address, send userOp with initCode to create account
         address proxyAddress = factory.computeProxyAddress(ANVIL_DEFAULT_USER);
         console.log("Computed Proxy Address:", proxyAddress);
+
+        vm.deal(deployer, 1 ether);
+        entryPoint.depositTo{value: 1 ether}(address(paymaster));
 
         // Generate initCode
         bytes memory encodedData = abi.encodeWithSelector(
@@ -205,16 +217,14 @@ contract ChatterPayTest is Test {
                 executeCalldata,
                 helperConfig.getConfig(),
                 proxyAddress,
-                ANVIL_DEFAUL_USER_KEY
+                ANVIL_DEFAUL_USER_KEY,
+                address(paymaster)
             );
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
         // Execute handleOps
-        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(
-            ops,
-            payable(proxyAddress)
-        );
+        entryPoint.handleOps(ops, payable(proxyAddress));
 
         // Check allowance
         uint256 allowance = ERC20Mock(dest).allowance(
@@ -269,16 +279,14 @@ contract ChatterPayTest is Test {
                 executeCalldata,
                 helperConfig.getConfig(),
                 proxyAddress,
-                ANVIL_DEFAUL_USER_KEY
+                ANVIL_DEFAUL_USER_KEY,
+                address(paymaster)
             );
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
         // Execute handleOps
-        IEntryPoint(helperConfig.getConfig().entryPoint).handleOps(
-            ops,
-            payable(proxyAddress)
-        );
+        entryPoint.handleOps(ops, payable(proxyAddress));
 
         // Check balance
         uint256 balance = ERC20Mock(dest).balanceOf(RANDOM_APPROVER);
