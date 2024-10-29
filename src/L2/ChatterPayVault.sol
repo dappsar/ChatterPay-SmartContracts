@@ -89,8 +89,7 @@ contract ChatterPayVault {
         address _wallet,
         address _erc20,
         uint256 _id,
-        string memory _password,
-        bytes32 _nonce
+        string memory _password
     ) public {
         Payment storage payment = reservedPayments[_wallet][_erc20][_id];
         if (payment.balance == 0) revert ChatterPayVault__NoBalanceToRedeem();
@@ -112,7 +111,7 @@ contract ChatterPayVault {
 
         // Verify the commitment
         bytes32 calculatedCommitment = keccak256(
-            abi.encodePacked(_password, _nonce)
+            abi.encodePacked(_password)
         );
         if (calculatedCommitment != commitEntry.commitmentHash)
             revert ChatterPayVault__InvalidCommitment();
