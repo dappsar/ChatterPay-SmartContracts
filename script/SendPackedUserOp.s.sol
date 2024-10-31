@@ -25,34 +25,65 @@ contract SendPackedUserOp is Script {
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         address ANVIL_DEFAULT_USER = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
         uint256 ANVIL_DEFAUL_USER_KEY = 0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
-        address chatterPayPaymasterAddress = DevOpsTools.get_most_recent_deployment("ChatterPayPaymaster", block.chainid);
+        address chatterPayPaymasterAddress = DevOpsTools
+            .get_most_recent_deployment("ChatterPayPaymaster", block.chainid);
 
         address dest = config.usdc;
         uint256 value = 0;
-        address chatterPayWalletFactoryAddress = DevOpsTools.get_most_recent_deployment("ChatterPayWalletFactory", block.chainid);
+        address chatterPayWalletFactoryAddress = DevOpsTools
+            .get_most_recent_deployment(
+                "ChatterPayWalletFactory",
+                block.chainid
+            );
         address chatterPayProxyAddress;
         bytes memory initCode;
-        if(ChatterPayWalletFactory(chatterPayWalletFactoryAddress).getProxiesCount() > 0){
+        if (
+            ChatterPayWalletFactory(chatterPayWalletFactoryAddress)
+                .getProxiesCount() > 0
+        ) {
             // send userOp without initCode
-            chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).proxies(0);
+            chatterPayProxyAddress = ChatterPayWalletFactory(
+                chatterPayWalletFactoryAddress
+            ).proxies(0);
             initCode = hex"";
         } else {
             // compute new address, send userOp with initCode to create account
-            chatterPayProxyAddress = ChatterPayWalletFactory(chatterPayWalletFactoryAddress).computeProxyAddress(ANVIL_DEFAULT_USER);
-            bytes memory encodedData = abi.encodeWithSignature("createProxy(address)", ANVIL_DEFAULT_USER);
-            bytes memory encodedFactory = abi.encodePacked(chatterPayWalletFactoryAddress);
+            chatterPayProxyAddress = ChatterPayWalletFactory(
+                chatterPayWalletFactoryAddress
+            ).computeProxyAddress(ANVIL_DEFAULT_USER);
+            bytes memory encodedData = abi.encodeWithSignature(
+                "createProxy(address)",
+                ANVIL_DEFAULT_USER
+            );
+            bytes memory encodedFactory = abi.encodePacked(
+                chatterPayWalletFactoryAddress
+            );
             initCode = abi.encodePacked(encodedFactory, encodedData);
         }
 
         // Example: approve 1e18 USDC to RANDOM_APPROVER
         // this is the function called by the wallet
-        bytes memory functionData = abi.encodeWithSelector(IERC20.approve.selector, RANDOM_APPROVER, 1e18);
+        bytes memory functionData = abi.encodeWithSelector(
+            IERC20.approve.selector,
+            RANDOM_APPROVER,
+            1e18
+        );
         // this is the function on the wallet called by the entrypoint
-        bytes memory executeCalldata = abi.encodeWithSelector(ChatterPay.execute.selector, dest, value, functionData);
+        bytes memory executeCalldata = abi.encodeWithSelector(
+            ChatterPay.execute.selector,
+            dest,
+            value,
+            functionData
+        );
 
-        
-        UserOperation memory userOp =
-            generateSignedUserOperation(initCode, executeCalldata, helperConfig.getConfig(), chatterPayProxyAddress, ANVIL_DEFAUL_USER_KEY, chatterPayPaymasterAddress);
+        UserOperation memory userOp = generateSignedUserOperation(
+            initCode,
+            executeCalldata,
+            helperConfig.getConfig(),
+            chatterPayProxyAddress,
+            ANVIL_DEFAUL_USER_KEY,
+            chatterPayPaymasterAddress
+        );
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
 
@@ -62,20 +93,73 @@ contract SendPackedUserOp is Script {
         vm.stopBroadcast();
     }
 
+    function generatePaymasterAndData(
+        address _paymasterAddress,
+        address _proxyAddress
+    ) public view returns (bytes memory) {
+        // Backend signer
+        uint256 backendPrivateKey = vm.envUint("BACKEND_PK");
+
+        // Set expiration timestamp to current time + 1 hour (3600 seconds)
+        uint64 expiration = uint64(block.timestamp + 3600);
+
+        // Create the message to sign (proxyAddress and expiration)
+        bytes32 messageHash = keccak256(
+            abi.encodePacked(_proxyAddress, expiration)
+        );
+
+        // HASTA ACA ESTA OK
+
+        // Sign the message using the backend signer's private key
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+            backendPrivateKey,
+            messageHash
+        );
+
+        // Construct the signature in (r, s, v) format
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        // Convert the expiration timestamp to bytes (big endian)
+        bytes8 expirationBytes = bytes8(expiration);
+
+        // Construct paymasterAndData by concatenating paymaster address, signature, and expiration
+        bytes memory paymasterAndData = abi.encodePacked(
+            _paymasterAddress,
+            signature,
+            expirationBytes
+        );
+
+        return paymasterAndData;
+    }
+
     function generateSignedUserOperation(
         bytes memory initCode,
         bytes memory callData,
         HelperConfig.NetworkConfig memory config,
         address chatterPayProxy,
         uint256 key,
-        address paymaster
+        address paymasterAddress
     ) public view returns (UserOperation memory) {
         // 1. Generate the unsigned data
         // uint256 nonce = vm.getNonce(chatterPayProxy);
-        UserOperation memory userOp = _generateUnsignedUserOperation(initCode, callData, chatterPayProxy, paymaster);
+
+        bytes memory paymasterAndData = generatePaymasterAndData(
+            paymasterAddress,
+            chatterPayProxy
+        );
+
+        UserOperation memory userOp = _generateUnsignedUserOperation(
+            initCode,
+            callData,
+            chatterPayProxy,
+            paymasterAndData
+        );
 
         // 2. Get the userOp Hash
-        bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
+        bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(
+            userOp
+        );
+
         bytes32 digest = userOpHash.toEthSignedMessageHash();
 
         // 3. Sign it
@@ -91,27 +175,29 @@ contract SendPackedUserOp is Script {
         return userOp;
     }
 
-    function _generateUnsignedUserOperation(bytes memory initCode, bytes memory callData, address sender, address paymaster)
-        internal
-        pure
-        returns (UserOperation memory)
-    {
+    function _generateUnsignedUserOperation(
+        bytes memory initCode,
+        bytes memory callData,
+        address sender,
+        bytes memory _paymasterAndData
+    ) internal pure returns (UserOperation memory) {
         uint128 verificationGasLimit = 16777216;
         uint128 callGasLimit = verificationGasLimit;
         uint128 maxPriorityFeePerGas = 256;
         uint128 maxFeePerGas = maxPriorityFeePerGas;
-        return UserOperation({
-            sender: sender,
-            nonce: 0,
-            initCode: initCode,
-            callData: callData,
-            callGasLimit: callGasLimit,
-            verificationGasLimit: verificationGasLimit,
-            preVerificationGas: verificationGasLimit,
-            maxFeePerGas: maxFeePerGas,
-            maxPriorityFeePerGas: maxPriorityFeePerGas,
-            paymasterAndData: abi.encodePacked(paymaster),
-            signature: hex""
-        });
+        return
+            UserOperation({
+                sender: sender,
+                nonce: 0,
+                initCode: initCode,
+                callData: callData,
+                callGasLimit: callGasLimit,
+                verificationGasLimit: verificationGasLimit,
+                preVerificationGas: verificationGasLimit,
+                maxFeePerGas: maxFeePerGas,
+                maxPriorityFeePerGas: maxPriorityFeePerGas,
+                paymasterAndData: _paymasterAndData,
+                signature: hex""
+            });
     }
 }

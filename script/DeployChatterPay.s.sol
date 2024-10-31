@@ -66,7 +66,8 @@ contract DeployChatterPay is Script {
         // paymaster = new ChatterPayPaymaster{
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(config.account);
-        paymaster = new ChatterPayPaymaster(config.entryPoint);
+        address backendSigner = vm.envAddress("BACKEND_EOA");
+        paymaster = new ChatterPayPaymaster(config.entryPoint, backendSigner);
         console.log("Paymaster deployed to address %s", address(paymaster));
 
         // Deploy Factory (with Wallet Implementation, EntryPoint, Account & Paymaster addresses as parameters)
@@ -99,8 +100,6 @@ contract DeployChatterPay is Script {
 
         console.log("proxyNFT deployed to address %s", address(proxyNFT));
         chatterPayNFT = ChatterPayNFT(proxyNFT);
-        chatterPayNFT.setAuthorized(backendEOA, true);
-        console.log("ChatterPayNFT: backend EOA authorized");
 
         vm.stopBroadcast();
 

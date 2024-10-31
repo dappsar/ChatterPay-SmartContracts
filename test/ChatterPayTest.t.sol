@@ -27,7 +27,7 @@ contract ChatterPayTest is Test {
     address RANDOM_USER = makeAddr("randomUser");
     address RANDOM_APPROVER = makeAddr("RANDOM_APPROVER");
     address ANVIL_DEFAULT_USER = 0x70997970C51812dc3A010C7d01b50e0d17dc79C8;
-    uint256 ANVIL_DEFAUL_USER_KEY =
+    uint256 ANVIL_DEFAULT_USER_KEY =
         0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d;
 
     function setUp() public {
@@ -145,7 +145,7 @@ contract ChatterPayTest is Test {
                 executeCalldata,
                 helperConfig.getConfig(),
                 proxyAddress,
-                ANVIL_DEFAUL_USER_KEY,
+                ANVIL_DEFAULT_USER_KEY,
                 address(paymaster)
             );
         UserOperation[] memory ops = new UserOperation[](1);
@@ -217,7 +217,7 @@ contract ChatterPayTest is Test {
                 executeCalldata,
                 helperConfig.getConfig(),
                 proxyAddress,
-                ANVIL_DEFAUL_USER_KEY,
+                ANVIL_DEFAULT_USER_KEY,
                 address(paymaster)
             );
         UserOperation[] memory ops = new UserOperation[](1);
@@ -279,7 +279,7 @@ contract ChatterPayTest is Test {
                 executeCalldata,
                 helperConfig.getConfig(),
                 proxyAddress,
-                ANVIL_DEFAUL_USER_KEY,
+                ANVIL_DEFAULT_USER_KEY,
                 address(paymaster)
             );
         UserOperation[] memory ops = new UserOperation[](1);
