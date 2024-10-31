@@ -11,7 +11,6 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {OwnableUpgradeable} from "lib/openzeppelin-contracts-upgradeable/contracts/access/OwnableUpgradeable.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstraction/contracts/core/Helpers.sol";
 import {IEntryPoint} from "lib/entry-point-v6/interfaces/IEntryPoint.sol";
 import {ITokensPriceFeeds} from "../Ethereum/TokensPriceFeeds.sol";
 
@@ -226,8 +225,8 @@ contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
             userOpHash
         );
         address signer = ECDSA.recover(ethSignedMessageHash, userOp.signature);
-        if (signer != owner()) return SIG_VALIDATION_FAILED;
-        return SIG_VALIDATION_SUCCESS;
+        if (signer != owner()) return 1;
+        return 0;
     }
 
     function _payPrefund(uint256 missingAccountFunds) internal {
