@@ -108,8 +108,6 @@ contract SendPackedUserOp is Script {
             abi.encodePacked(_proxyAddress, expiration)
         );
 
-        // HASTA ACA ESTA OK
-
         // Sign the message using the backend signer's private key
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
             backendPrivateKey,
