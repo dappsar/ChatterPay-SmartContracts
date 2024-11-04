@@ -13,12 +13,21 @@ error ChatterPayVault__InvalidCommitment();
 error ChatterPayVault__CommitmentExpired();
 error ChatterPayVault__NoBalanceToCancel();
 error ChatterPayVault__CannotCancelActiveCommit();
+error ChatterPayVault__InvalidId();
+error ChatterPayVault__InvalidCommitmentHash();
+error ChatterPayVault__UnauthorizedCancel();
 
 contract ChatterPayVault {
     struct Payment {
+        address wallet;
+        address token;
         uint256 balance;
         bytes32 passwordHash;
-        address redeemer; // Optional: Address of the expected redeemer
+        address redeemer;
+        bool isReserved;
+        bool isCommited;
+        bool isRedeemed;
+        uint256 commitTimestamp;
     }
 
     struct Commit {
@@ -28,14 +37,16 @@ contract ChatterPayVault {
     }
 
     uint256 constant COMMIT_TIMEOUT = 1 hours;
-    // Mapping: payer => token => id => Payment
-    mapping(address payer => mapping(address token => mapping(uint256 id => Payment)))
-        public reservedPayments;
-    mapping(address payer => mapping(address token => mapping(uint256 id => Commit)))
-        public commits;
+
+    mapping(uint256 id => Payment) public payments;
 
     event PaymentReserved(
         address indexed payer,
+        address indexed token,
+        uint256 indexed amount
+    );
+    event PaymentCommitted(
+        address indexed commiter,
         address indexed token,
         uint256 indexed amount
     );
@@ -56,99 +67,79 @@ contract ChatterPayVault {
         address _erc20,
         uint256 _id,
         uint256 _amount,
-        bytes32 _passwordHash,
-        address _redeemer
+        bytes32 _passwordHash
     ) public {
-        reservedPayments[msg.sender][_erc20][_id] = Payment({
+        if (payments[_id].isReserved || payments[_id].isRedeemed)
+            revert ChatterPayVault__InvalidId();
+        payments[_id] = Payment({
+            wallet: msg.sender,
+            token: _erc20,
             balance: _amount,
             passwordHash: _passwordHash,
-            redeemer: _redeemer // Optional: Set to a specific address if known
+            redeemer: address(0),
+            isReserved: true,
+            isCommited: false,
+            isRedeemed: false,
+            commitTimestamp: 0
         });
         IERC20(_erc20).transferFrom(msg.sender, address(this), _amount);
         emit PaymentReserved(msg.sender, _erc20, _amount);
     }
 
-    function commitForPayment(
-        address _wallet,
-        address _token,
-        uint256 _id,
-        bytes32 _commitmentHash
-    ) public {
-        Commit storage existingCommit = commits[_wallet][_token][_id];
-        if (existingCommit.commitmentHash != bytes32(0))
-            revert ChatterPayVault__CommitmentAlreadySet();
-
-        commits[_wallet][_token][_id] = Commit({
-            commitmentHash: _commitmentHash,
-            timestamp: block.timestamp,
-            redeemer: msg.sender
-        });
+    function commitForPayment(uint256 _id, bytes32 _commitmentHash) public {
+        if (payments[_id].isCommited || payments[_id].isRedeemed)
+            revert ChatterPayVault__InvalidId();
+        if (payments[_id].passwordHash != _commitmentHash)
+            revert ChatterPayVault__InvalidCommitmentHash();
+        payments[_id].redeemer = msg.sender;
+        payments[_id].isCommited = true;
+        payments[_id].commitTimestamp = block.timestamp;
+        emit PaymentCommitted(
+            msg.sender,
+            payments[_id].token,
+            payments[_id].balance
+        );
     }
 
-    function redeemPayment(
-        address _wallet,
-        address _erc20,
-        uint256 _id,
-        string memory _password
-    ) public {
-        Payment storage payment = reservedPayments[_wallet][_erc20][_id];
+    function redeemPayment(uint256 _id, string memory _password) public {
+        Payment storage payment = payments[_id];
+        if (payment.isRedeemed || !payment.isCommited)
+            revert ChatterPayVault__InvalidId();
+        if (payment.redeemer != msg.sender)
+            revert ChatterPayVault__UnauthorizedRedeemer();
         if (payment.balance == 0) revert ChatterPayVault__NoBalanceToRedeem();
 
-        Commit storage commitEntry = commits[_wallet][_erc20][_id];
-        if (commitEntry.commitmentHash == bytes32(0))
-            revert ChatterPayVault__NoCommitmentFound();
-
-        // In redeemPayment function
-        if (block.timestamp > commitEntry.timestamp + COMMIT_TIMEOUT) {
-            // Commitment expired
-            delete commits[_wallet][_erc20][_id];
+        if (block.timestamp > payment.commitTimestamp + COMMIT_TIMEOUT) {
             revert ChatterPayVault__CommitmentExpired();
         }
-
-        // Verify that the sender is the same as the committer
-        if (commitEntry.redeemer != msg.sender)
-            revert ChatterPayVault__UnauthorizedRedeemer();
-
-        // Verify the commitment
-        bytes32 calculatedCommitment = keccak256(
-            abi.encodePacked(_password)
-        );
-        if (calculatedCommitment != commitEntry.commitmentHash)
-            revert ChatterPayVault__InvalidCommitment();
 
         // Verify password matches the payment's password hash
         if (keccak256(abi.encodePacked(_password)) != payment.passwordHash)
             revert ChatterPayVault__IncorrectPassword();
 
-        // Verify redeemer address (optional)
-        if (payment.redeemer != address(0) && payment.redeemer != msg.sender)
-            revert ChatterPayVault__UnauthorizedRedeemer();
-
-        // Clear the commitment to prevent replay attacks
-        delete commits[_wallet][_erc20][_id];
-
         // Transfer the funds
         uint256 amount = payment.balance;
-        payment.balance = 0; // Prevent re-entrancy
-        IERC20(_erc20).transfer(msg.sender, amount);
+        payment.balance = 0;
+        payment.isRedeemed = true;
+        payment.isReserved = false;
+        payment.isCommited = false;
+        payment.passwordHash = bytes32(0);
+        IERC20(payment.token).transfer(msg.sender, amount);
 
-        emit PaymentRedeemed(_wallet, _erc20, msg.sender, amount);
+        emit PaymentRedeemed(payment.wallet, payment.token, msg.sender, amount);
     }
 
     function cancelPayment(address _erc20, uint256 _id) public {
-        Payment storage payment = reservedPayments[msg.sender][_erc20][_id];
+        Payment storage payment = payments[_id];
+        if (payment.wallet != msg.sender)
+            revert ChatterPayVault__UnauthorizedCancel();
         if (payment.balance == 0) revert ChatterPayVault__NoBalanceToCancel();
 
-        Commit storage commitEntry = commits[msg.sender][_erc20][_id];
-
         // Verificar si hay un compromiso activo
-        if (commitEntry.commitmentHash != bytes32(0)) {
+        if (payment.passwordHash != bytes32(0)) {
             // Si hay un compromiso, verificar si ha expirado
-            if (block.timestamp <= commitEntry.timestamp + COMMIT_TIMEOUT) {
+            if (block.timestamp <= payment.commitTimestamp + COMMIT_TIMEOUT) {
                 revert ChatterPayVault__CannotCancelActiveCommit();
-            } else {
-                // Si el compromiso ha expirado, podemos eliminarlo
-                delete commits[msg.sender][_erc20][_id];
             }
         }
 
@@ -156,6 +147,7 @@ contract ChatterPayVault {
         uint256 amount = payment.balance;
         payment.balance = 0;
         IERC20(_erc20).transfer(msg.sender, amount);
+        delete payments[_id];
 
         emit PaymentCancelled(msg.sender, _erc20, amount);
     }
