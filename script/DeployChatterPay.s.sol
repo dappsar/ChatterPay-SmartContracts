@@ -75,11 +75,13 @@ contract DeployChatterPay is Script {
         // factory = new ChatterPayWalletFactory{
         //     salt: keccak256(abi.encodePacked(config.account))
         // }(address(chatterPay), config.entryPoint, config.account, paymaster);
-        factory = new ChatterPayWalletFactory(address(chatterPay), config.entryPoint, config.account, address(paymaster));
-        console.log(
-            "WalletFactory deployed to address %s",
-            address(factory)
+        factory = new ChatterPayWalletFactory(
+            config.account,
+            address(chatterPay),
+            config.entryPoint,
+            address(paymaster)
         );
+        console.log("WalletFactory deployed to address %s", address(factory));
 
         chatterPay.initialize(
             config.entryPoint,

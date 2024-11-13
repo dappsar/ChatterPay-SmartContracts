@@ -44,7 +44,7 @@ contract SendPackedUserOp is Script {
             // send userOp without initCode
             chatterPayProxyAddress = ChatterPayWalletFactory(
                 chatterPayWalletFactoryAddress
-            ).proxies(0);
+            ).getProxies()[0];
             initCode = hex"";
         } else {
             // compute new address, send userOp with initCode to create account

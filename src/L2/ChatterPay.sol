@@ -100,10 +100,10 @@ contract ChatterPay is IAccount, UUPSUpgradeable, OwnableUpgradeable {
 
     function initialize(
         address _entryPoint,
-        address _newOwner,
+        address _owner,
         address _paymaster
     ) public initializer {
-        __Ownable_init(_newOwner);
+        __Ownable_init(_owner);
         __UUPSUpgradeable_init();
         s_entryPoint = IEntryPoint(_entryPoint);
         s_paymaster = _paymaster;

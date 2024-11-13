@@ -79,7 +79,7 @@ contract ChatterPayTest is Test {
         address proxy = factory.createProxy(RANDOM_USER);
         console.log("Proxy Address:", proxy);
         assertEq(
-            factory.proxies(0),
+            factory.getProxies()[0],
             proxy,
             "Proxy should be stored in the factory"
         );
@@ -101,7 +101,9 @@ contract ChatterPayTest is Test {
 
     function testComputeAddressMustBeEqualToCreateProxyAddress() public {
         address proxy = factory.createProxy(RANDOM_USER);
+        console.log("Proxy Address:", proxy);
         address computedProxy = factory.computeProxyAddress(RANDOM_USER);
+        console.log("Computed Proxy Address:", computedProxy);
         assertEq(
             proxy,
             computedProxy,

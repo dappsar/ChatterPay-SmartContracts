@@ -13,16 +13,21 @@ import {ChatterPayWalletProxy} from "./ChatterPayWalletProxy.sol";
                                 ERRORS
 //////////////////////////////////////////////////////////////*/
 
+error ChatterPayWalletFactory__ProxyAlreadyExists();
 error ChatterPayWalletFactory__InvalidOwner();
 
 /*//////////////////////////////////////////////////////////////
                             INTERFACES
 //////////////////////////////////////////////////////////////*/
 
+interface IProxy {
+    function owner() external view returns (address);
+}
+
 interface IChatterPayWalletFactory {
     function createProxy(address _owner) external returns (address);
 
-    function getProxyOwner(address proxy) external returns (bytes memory);
+    function getProxyOwner(address proxy) external returns (address);
 
     function computeProxyAddress(
         address _owner
@@ -42,10 +47,10 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                             STATE VARIABLES
     //////////////////////////////////////////////////////////////*/
 
-    address[] public proxies;
-    address immutable entryPoint;
     address public walletImplementation;
-    address public paymaster;
+    address immutable entryPoint;
+    address public immutable paymaster;
+    address[] private proxies;
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -58,7 +63,12 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                                FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _walletImplementation, address _entryPoint, address _owner, address _paymaster) Ownable(_owner) {
+    constructor(
+        address _owner,
+        address _walletImplementation,
+        address _entryPoint,
+        address _paymaster
+    ) Ownable(_owner) {
         walletImplementation = _walletImplementation;
         entryPoint = _entryPoint;
         paymaster = _paymaster;
@@ -69,7 +79,12 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
     //////////////////////////////////////////////////////////////*/
 
     function createProxy(address _owner) public returns (address) {
-        if(_owner == address(0)) revert ChatterPayWalletFactory__InvalidOwner();
+        if (_owner == address(0))
+            revert ChatterPayWalletFactory__InvalidOwner();
+        address computedAddress = computeProxyAddress(_owner);
+        if (computedAddress.code.length > 0) {
+            revert ChatterPayWalletFactory__ProxyAlreadyExists();
+        }
         ChatterPayWalletProxy walletProxy = new ChatterPayWalletProxy{
             salt: keccak256(abi.encodePacked(_owner))
         }(
@@ -86,23 +101,24 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         return address(walletProxy);
     }
 
-    function getProxyOwner(address proxy) public returns (bytes memory) {
-        (, bytes memory data) = proxy.call(abi.encodeWithSignature("owner()"));
-        return data;
-    }
-
-    function setImplementationAddress(address _walletImplementation) public onlyOwner {
+    function setImplementationAddress(
+        address _walletImplementation
+    ) public onlyOwner {
         walletImplementation = _walletImplementation;
         emit NewImplementation(_walletImplementation);
     }
 
     function computeProxyAddress(address _owner) public view returns (address) {
+        // Compute the salt using the owner's address
+        bytes32 salt = keccak256(abi.encodePacked(_owner));
+        // Get the bytecode of the proxy contract
         bytes memory bytecode = getProxyBytecode(_owner);
+        // Compute the address using CREATE2 formula
         bytes32 hash = keccak256(
             abi.encodePacked(
                 bytes1(0xff),
                 address(this),
-                keccak256(abi.encodePacked(_owner)),
+                salt,
                 keccak256(bytecode)
             )
         );
@@ -113,22 +129,29 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
                            INTERNAL FUNCTIONS
     //////////////////////////////////////////////////////////////*/
 
-    function getProxyBytecode(address _owner) internal view returns (bytes memory) {
+    function getProxyBytecode(
+        address _owner
+    ) internal view returns (bytes memory) {
         bytes memory initializationCode = abi.encodeWithSignature(
             "initialize(address,address,address)",
             entryPoint,
             _owner,
             paymaster
         );
-        return abi.encodePacked(
-            type(ChatterPayWalletProxy).creationCode,
-            abi.encode(walletImplementation, initializationCode)
-        );
+        return
+            abi.encodePacked(
+                type(ChatterPayWalletProxy).creationCode,
+                abi.encode(walletImplementation, initializationCode)
+            );
     }
 
     /*//////////////////////////////////////////////////////////////
                                 GETTERS
     //////////////////////////////////////////////////////////////*/
+
+    function getProxyOwner(address proxy) public view returns (address) {
+        return IProxy(proxy).owner();
+    }
 
     function getProxies() public view returns (address[] memory) {
         return proxies;
