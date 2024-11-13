@@ -85,8 +85,7 @@ contract DeployChatterPay is Script {
 
         chatterPay.initialize(
             config.entryPoint,
-            config.account,
-            address(paymaster)
+            config.account
         );
         console.log("ChatterPay initialized");
 

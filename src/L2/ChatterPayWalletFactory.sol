@@ -90,10 +90,9 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         }(
             walletImplementation,
             abi.encodeWithSignature(
-                "initialize(address,address,address)",
+                "initialize(address,address)",
                 entryPoint,
-                _owner,
-                paymaster
+                _owner
             )
         );
         proxies.push(address(walletProxy));
@@ -133,10 +132,9 @@ contract ChatterPayWalletFactory is Ownable, IChatterPayWalletFactory {
         address _owner
     ) internal view returns (bytes memory) {
         bytes memory initializationCode = abi.encodeWithSignature(
-            "initialize(address,address,address)",
+            "initialize(address,address)",
             entryPoint,
-            _owner,
-            paymaster
+            _owner
         );
         return
             abi.encodePacked(
