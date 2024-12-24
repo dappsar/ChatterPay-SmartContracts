@@ -34,5 +34,5 @@ jobs:
       with:
         sarif: results.sarif
         fail-on: none
-        slither-args: "contracts --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/"
+        slither-args: "src --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/"
       continue-on-error: true
