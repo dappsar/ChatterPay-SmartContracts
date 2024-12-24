@@ -10,4 +10,7 @@ contract ChatterPayWalletProxy is ERC1967Proxy {
     function getImplementation() public view returns (address) {
         return _implementation();
     }
+
+    // Explicit receive function
+    receive() external payable {}
 }
