@@ -29,7 +29,7 @@ __Components__:
 
 This repository contains the source code of the Smart Contracts.
 
-![ChatterPay Smart Contracts Workflow](imgs/ChatterPay%20Smart%20Contracts%20Flow.png)
+![ChatterPay Smart Contracts Workflow](./.doc/architecture/images/chatterpay-scs-flow.png)
 
 
 __Build With__:
