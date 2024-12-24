@@ -1,6 +1,5 @@
 {
-    "name": "eth-arg",
-
+    "name": "chatterpay-contracts",
     "type": "module",
     "scripts": {
         "generate-types": "typechain --target=ethers-v5 './src/artifacts/**/*.json'"
