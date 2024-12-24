@@ -1,11 +1,9 @@
 {
     "name": "eth-arg",
-    "module": "src/index.ts",
+
     "type": "module",
     "scripts": {
-        "start": "bun run src/index.ts",
-        "generate-types": "typechain --target=ethers-v5 './src/artifacts/**/*.json'",
-        "dev": "bun --watch src/index.ts"
+        "generate-types": "typechain --target=ethers-v5 './src/artifacts/**/*.json'"
     },
     "devDependencies": {
         "@types/bun": "latest",
