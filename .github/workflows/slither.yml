@@ -25,5 +25,5 @@ jobs:
         node-version: 16
         sarif: results.sarif
         fail-on: none
-        slither-args: "." --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
+        slither-args: ". --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/"
       continue-on-error: true
