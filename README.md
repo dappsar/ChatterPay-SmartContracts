@@ -72,6 +72,9 @@ BACKEND_PK=chatterpay's bachend private key (seed)
 
 __4. Install Dependencies__:
 
+```sh
+yarn
+```
 
 ```sh
 git submodule update --init --recursive
@@ -82,7 +85,7 @@ __5. Usage__:
 _Build_
 
 ```shell
-$ forge build
+$ forge clean && forge build
 ```
 
 _Test_
