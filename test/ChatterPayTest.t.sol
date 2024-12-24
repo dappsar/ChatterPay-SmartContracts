@@ -64,7 +64,7 @@ contract ChatterPayTest is Test {
 
     function testProxyOwner() public {
         address proxy = createProxyForUser(RANDOM_USER);
-        (bool success, bytes memory owner) = proxy.call(
+        (, bytes memory owner) = proxy.call(
             abi.encodeWithSignature("owner()")
         );
         assertEq(
@@ -87,7 +87,7 @@ contract ChatterPayTest is Test {
 
     function testProxyImplementationShouldBeChatterPayImplementation() public {
         address proxy = createProxyForUser(RANDOM_USER);
-        (bool success, bytes memory implementation) = proxy.call(
+        (, bytes memory implementation) = proxy.call(
             abi.encodeWithSignature("getImplementation()")
         );
         assertEq(
