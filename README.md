@@ -131,3 +131,13 @@ $ forge --help
 $ anvil --help
 $ cast --help
 ```
+
+_Static Checks_
+
+Solidity Static Analysis with [Slither](https://github.com/crytic/slither).  
+To install slither go to [this link](https://github.com/crytic/slither#how-to-install).
+
+```shell
+$ slither .
+```
+
