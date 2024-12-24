@@ -3,7 +3,7 @@ name: test
 on:
   push:
     branches:
-      - '*'
+    - '*'
   pull_request:
     branches:
       - develop
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Initialize and update submodules
         run: |
