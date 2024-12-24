@@ -32,7 +32,5 @@ jobs:
       uses: crytic/slither-action@v0.4.0
       id: slither
       with:
-        sarif: results.sarif
         fail-on: none
-        slither-args: "src --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/"
       continue-on-error: true
